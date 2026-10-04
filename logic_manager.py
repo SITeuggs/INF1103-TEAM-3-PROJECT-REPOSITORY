@@ -66,3 +66,21 @@ CLARITY_OPTIONS = {
     "B": "Partly — I can feel it but can't quite explain it",
     "C": "Not really — it's kind of a blur",
 }
+
+CLARITY_FOLLOWUPS = {
+    "A": {
+        "high":    "What felt different about today compared to a normal day?",
+        "low":     "What's one thing within your control right now?",
+        "neutral": "What's one thing within your control right now?",
+    },
+    "B": {
+        "high":    "If you had to take a guess, what would you call it?",
+        "low":     "If you had to take a guess, what would you call it?",
+        "neutral": "If you had to take a guess, what would you call it?",
+    },
+    "C": {
+        "high":    "That's okay. What's one thing you do know for sure right now?",
+        "low":     "That's okay. What's one thing you do know for sure right now?",
+        "neutral": "That's okay. What's one thing you do know for sure right now?",
+    },
+}
