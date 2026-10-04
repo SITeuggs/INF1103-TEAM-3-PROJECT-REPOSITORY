@@ -108,3 +108,10 @@ SEVERITY = {"accept": 0, "check_in": 1, "flag": 2}
 
 
 STRESS_THEMES = ("stress", "pressure", "overwhelm")
+
+SUPPORT_CONTACTS = [
+    {"name": "Samaritans of Singapore", "contact": "1767"},
+    {"name": "SOS CareText (WhatsApp)", "contact": "9151 1767"},
+    {"name": "SIT Counselling", "contact": "6592 2030"},
+    {"name": "mindline.sg", "contact": "free, anonymous, online"},
+]
