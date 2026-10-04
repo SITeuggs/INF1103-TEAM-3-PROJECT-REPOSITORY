@@ -156,3 +156,36 @@ def mood_band(mood):
     if mood <= 2:
         return "low"
     return "neutral"
+
+
+def apply_rules(sentiment, mood, themes):
+    """
+    Work out the outcome from our own rules only, ignoring the AI's pick.
+    This is what keeps the app working even when the AI is wrong.
+    """
+    has_stress_theme = False
+    for theme in themes:
+        if theme in STRESS_THEMES:
+            has_stress_theme = True
+            break
+
+    if sentiment == "negative" and mood >= 4:
+        return "check_in"
+    elif sentiment == "positive" and mood <= 2:
+        return "check_in"
+    elif mood == 1:
+        return "check_in"
+    elif has_stress_theme and mood <= 2:
+        return "flag"
+    else:
+        return "accept"
+
+
+def pick_more_serious(ai_outcome, rules_outcome):
+    """Return whichever outcome is more serious, so neither side can downgrade the other."""
+    ai_severity = get_value(SEVERITY, ai_outcome, 0)
+    rules_severity = SEVERITY[rules_outcome]
+
+    if ai_severity > rules_severity:
+        return ai_outcome
+    return rules_outcome
