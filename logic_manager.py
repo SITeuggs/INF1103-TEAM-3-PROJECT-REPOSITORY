@@ -120,3 +120,29 @@ WEEKLY_LIMIT = 7
 WEEKLY_DAYS = 7
 
 MIN_ENTRIES_FOR_REVIEW = 3
+
+# ---------- small helpers ----------
+
+def get_value(data, key, default):
+    """Return data[key] if the key exists, otherwise return default.""" 
+    if key in data.keys():
+        return data[key]
+    return default
+
+
+def join_with(parts, separator):
+    """Join a list of items into one string with separator in between."""
+    text = ""
+    for i in range(len(parts)):
+        if i > 0:
+            text = text + separator
+        text = text + str(parts[i])
+    return text
+
+
+def average(numbers):
+    """Work out the mean of a list of numbers."""
+    total = 0
+    for n in numbers:
+        total = total + n
+    return total / len(numbers)
