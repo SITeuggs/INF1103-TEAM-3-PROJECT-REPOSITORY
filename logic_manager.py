@@ -189,3 +189,19 @@ def pick_more_serious(ai_outcome, rules_outcome):
     if ai_severity > rules_severity:
         return ai_outcome
     return rules_outcome
+
+
+def adjust_score(mood, sentiment):
+    """Move the score by one when the writing disagrees with the rating."""
+    score = mood
+
+    if sentiment == "negative" and mood >= 3:
+        score = score - 1
+        if score < 1:
+            score = 1
+    elif sentiment == "positive" and mood <= 3:
+        score = score + 1
+        if score > 5:
+            score = 5
+
+    return score
