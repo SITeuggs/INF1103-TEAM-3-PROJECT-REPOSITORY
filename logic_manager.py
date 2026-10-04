@@ -146,3 +146,13 @@ def average(numbers):
     for n in numbers:
         total = total + n
     return total / len(numbers)
+
+# ---------- rules ----------
+
+def mood_band(mood):
+    """Turn a 1-5 mood score into high, neutral or low."""
+    if mood >= 4:
+        return "high"
+    if mood <= 2:
+        return "low"
+    return "neutral"
