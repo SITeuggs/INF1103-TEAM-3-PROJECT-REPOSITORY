@@ -115,3 +115,8 @@ SUPPORT_CONTACTS = [
     {"name": "SIT Counselling", "contact": "6592 2030"},
     {"name": "mindline.sg", "contact": "free, anonymous, online"},
 ]
+
+WEEKLY_LIMIT = 7
+WEEKLY_DAYS = 7
+
+MIN_ENTRIES_FOR_REVIEW = 3
