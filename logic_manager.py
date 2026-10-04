@@ -84,3 +84,27 @@ CLARITY_FOLLOWUPS = {
         "neutral": "That's okay. What's one thing you do know for sure right now?",
     },
 }
+
+CLOSE_PROMPTS = {
+    "high":    "What's one thing from today you want to carry into tomorrow?",
+    "low":     "What's one small thing you want to do differently tomorrow?",
+    "neutral": "What's one thing you want to take away from today?",
+}
+
+MODES = {
+    "A": "A straight, honest read",
+    "B": "Celebrate it and lock it in",
+    "C": "Somewhere to set it down",
+}
+
+OUTCOME_LABELS = {
+    "accept":   "all clear",
+    "flag":     "worth sitting with",
+    "check_in": "worth a closer look",
+}
+
+
+SEVERITY = {"accept": 0, "check_in": 1, "flag": 2}
+
+
+STRESS_THEMES = ("stress", "pressure", "overwhelm")
