@@ -205,3 +205,42 @@ def adjust_score(mood, sentiment):
             score = 5
 
     return score
+
+
+def has_low_mood_streak(records):
+    """
+    Check whether the last three entries were all low mood.
+    Three entries, not three days: logging twice in one evening counts
+    as two. Grouping by date would be the next improvement.
+    """
+    last_three = records[-3:]
+    if len(last_three) < 3:
+        return False
+
+    for r in last_three:
+        past_mood = get_value(r, "mood", 3)
+        if not past_mood:
+            past_mood = 3
+        if int(past_mood) > 2:
+            return False
+
+    return True
+
+
+def needs_support_info(mood, score, outcome, records):
+    """
+    Decide whether to show the support contacts after an entry.
+    Fires on the lowest mood, a score of 2 or below, a serious
+    outcome, or three low entries before this one.
+    records does not include the entry being logged, so this rule
+    is about the run leading up to today rather than today itself.
+    """
+    if mood == 1:
+        return True
+    if score <= 2:
+        return True
+    if get_value(SEVERITY, outcome, 0) >= 2:
+        return True
+    if has_low_mood_streak(records):
+        return True
+    return False
