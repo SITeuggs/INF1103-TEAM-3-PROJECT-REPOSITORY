@@ -60,3 +60,9 @@ FOLLOWUPS = {
         "D": "What's your body telling you right now?",
     },
 }
+
+CLARITY_OPTIONS = {
+    "A": "Yes — I can put it into words",
+    "B": "Partly — I can feel it but can't quite explain it",
+    "C": "Not really — it's kind of a blur",
+}
