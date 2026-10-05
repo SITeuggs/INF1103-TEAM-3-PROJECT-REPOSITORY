@@ -256,3 +256,11 @@ def was_analysed(record):
     if not get_value(record, "reflection", ""):
         return False
     return True
+
+def recent_entries(records, limit):
+    """The most recent entries the AI actually analysed."""
+    analysed = []
+    for r in records:
+        if was_analysed(r):
+            analysed.append(r)
+    return analysed[-limit:]
