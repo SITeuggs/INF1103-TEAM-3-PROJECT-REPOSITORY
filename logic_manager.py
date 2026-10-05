@@ -264,3 +264,21 @@ def recent_entries(records, limit):
         if was_analysed(r):
             analysed.append(r)
     return analysed[-limit:]
+
+def entry_time(record):
+    """The timestamp of a record as text. Used for sorting."""
+    return str(get_value(record, "timestamp", ""))
+
+def sort_by_time(records):
+    """
+    Put records in date order, oldest first, so that "recent" does not
+    depend on the order the sheet happened to hand them back in.
+    """
+    ordered = list(records)
+    for i in range(1, len(ordered)):
+        for j in range(i, 0, -1):
+            if entry_time(ordered[j]) < entry_time(ordered[j - 1]):
+                ordered[j], ordered[j - 1] = ordered[j - 1], ordered[j]
+            else:
+                break
+    return ordered
