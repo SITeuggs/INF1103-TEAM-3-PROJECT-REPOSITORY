@@ -313,3 +313,10 @@ def mood_range(records):
     if not moods:
         return 0, 0
     return min(moods), max(moods)
+
+def average_mood(records):
+    """The mean mood across a stretch of entries."""
+    moods = mood_values(records)
+    if not moods:
+        return 0
+    return average(moods)
