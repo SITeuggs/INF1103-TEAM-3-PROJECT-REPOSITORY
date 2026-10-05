@@ -1,6 +1,5 @@
 # logic_manager.py
 # Holds the question data, the scoring rules, and the row builder.
-# No input() and no print() in this file, so the rules can be tested on their own.
 
 MOOD_SCALE = {
     1: {"emoji": "😔", "text": "I'm struggling — today took more than I had to give"},
