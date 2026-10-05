@@ -243,3 +243,16 @@ def needs_support_info(mood, score, outcome, records):
     if has_low_mood_streak(records):
         return True
     return False
+
+
+def was_analysed(record):
+    """
+    True when the AI actually produced a reading for this entry.
+    A fallback row still has a sentiment but no reflection, so the
+    reflection is what tells the two apart.
+    """
+    if not get_value(record, "sentiment", ""):
+        return False
+    if not get_value(record, "reflection", ""):
+        return False
+    return True
