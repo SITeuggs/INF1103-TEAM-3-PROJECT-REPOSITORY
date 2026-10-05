@@ -282,3 +282,18 @@ def sort_by_time(records):
             else:
                 break
     return ordered
+
+def entries_since(records, cutoff_date):
+    """
+    The analysed entries dated on or after cutoff_date.
+    Dates compare as plain text because a timestamp like
+    "2026-10-02T15:52:10" sorts the same way the date does.
+    """
+    kept = []
+    for r in records:
+        if not was_analysed(r):
+            continue
+        stamp = str(get_value(r, "timestamp", ""))[:10]
+        if stamp >= cutoff_date:
+            kept.append(r)
+    return kept
