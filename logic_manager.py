@@ -320,3 +320,36 @@ def average_mood(records):
     if not moods:
         return 0
     return average(moods)
+
+def mood_trajectory(records):
+    """
+    Work out which way mood has been going, from the numbers alone.
+    We calculate this instead of asking the AI, because it is
+    arithmetic and the AI would only be guessing at it.
+    Returns "rising", "falling", "flat" or "volatile".
+    """
+    moods = mood_values(records)
+
+    if len(moods) < 2:
+        return "flat"
+
+    if len(moods) >= 4:
+        total_swing = 0
+        for i in range(1, len(moods)):
+            step = moods[i] - moods[i - 1]
+            if step < 0:
+                step = -step
+            total_swing = total_swing + step
+        if total_swing / (len(moods) - 1) >= 1.5:
+            return "volatile"
+
+    half = len(moods) // 2
+    first_average = average(moods[:half])
+    second_average = average(moods[-half:])
+    change = second_average - first_average
+
+    if change >= 0.5:
+        return "rising"
+    if change <= -0.5:
+        return "falling"
+    return "flat"
