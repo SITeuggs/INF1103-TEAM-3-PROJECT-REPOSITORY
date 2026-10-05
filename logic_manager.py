@@ -297,3 +297,19 @@ def entries_since(records, cutoff_date):
         if stamp >= cutoff_date:
             kept.append(r)
     return kept
+
+def mood_values(records):
+    """Pull the mood numbers out of a list of records."""
+    moods = []
+    for r in records:
+        value = get_value(r, "mood", 0)
+        if value:
+            moods.append(int(value))
+    return moods
+
+def mood_range(records):
+    """The lowest and highest mood in a stretch, as (low, high)."""
+    moods = mood_values(records)
+    if not moods:
+        return 0, 0
+    return min(moods), max(moods)
