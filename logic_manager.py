@@ -353,3 +353,26 @@ def mood_trajectory(records):
     if change <= -0.5:
         return "falling"
     return "flat"
+
+
+# ---------- putting one entry together ----------
+
+def evaluate(entry, ai, records):
+    """Run the rules on one entry. Returns (outcome, score)."""
+    sentiment = get_value(ai, "sentiment", "neutral")
+    mood = entry["mood"]
+
+    themes = []
+    for t in get_value(ai, "themes", []):
+        themes.append(t.lower())
+
+    rules_outcome = apply_rules(sentiment, mood, themes)
+    ai_outcome = get_value(ai, "recommended_outcome", "accept")
+
+    outcome = pick_more_serious(ai_outcome, rules_outcome)
+    score = adjust_score(mood, sentiment)
+
+    if has_low_mood_streak(records) and outcome == "accept":
+        outcome = "check_in"
+
+    return outcome, score
