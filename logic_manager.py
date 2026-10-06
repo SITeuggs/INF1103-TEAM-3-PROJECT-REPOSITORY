@@ -376,3 +376,46 @@ def evaluate(entry, ai, records):
         outcome = "check_in"
 
     return outcome, score
+
+
+def build_row(entry, ai, outcome, score):
+    """Combine the answers, the AI output and the rules result into one row."""
+    band = mood_band(entry["mood"])
+
+    emotions_str = join_with(get_value(ai, "emotions", []), "|")
+    themes_str = join_with(get_value(ai, "themes", []), "|")
+
+    row = {
+        "id":                  entry["id"],
+        "timestamp":           entry["timestamp"],
+        "profile":             entry["profile"],
+        "note":                entry["note"],
+        "mood":                entry["mood"],
+        "mood_label":          MOOD_SCALE[entry["mood"]]["text"],
+        "trigger_prompt":      entry["trigger_prompt"],
+        "trigger_choice":      entry["trigger_choice"],
+        "trigger_label":       TRIGGERS[band]["options"][entry["trigger_choice"]],
+        "followup_prompt":     entry["followup_q"],
+        "followup_text":       entry["followup_text"],
+        "clarity_choice":      entry["clarity"],
+        "clarity_label":       CLARITY_OPTIONS[entry["clarity"]],
+        "clarity_prompt":      entry["clarity_q"],
+        "clarity_text":        entry["clarity_text"],
+        "close_prompt":        entry["close_q"],
+        "close_text":          entry["close_text"],
+        "mode_choice":         entry["mode"],
+        "mode_label":          MODES[entry["mode"]],
+        "sentiment":           get_value(ai, "sentiment", ""),
+        "emotions":            emotions_str,
+        "themes":              themes_str,
+        "congruence":          get_value(ai, "congruence", ""),
+        "congruence_note":     get_value(ai, "congruence_note", ""),
+        "tag_ai":              get_value(ai, "tag_ai", ""),
+        "recommended_outcome": get_value(ai, "recommended_outcome", ""),
+        "reasoning":           get_value(ai, "reasoning", ""),
+        "reflection":          get_value(ai, "reflection", ""),
+        "reframe":             get_value(ai, "reframe", ""),
+        "outcome":             outcome,
+        "score":               score,
+    }
+    return row
