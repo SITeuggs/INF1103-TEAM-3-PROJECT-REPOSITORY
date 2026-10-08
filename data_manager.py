@@ -91,3 +91,17 @@ def save_entry(row: dict) -> bool:
     except ValueError:
         # got a 200 but not json — assume it went through
         return True
+
+def load_config() -> dict:
+    """Load the local config file, which stores the user's name."""
+    if not os.path.exists(CONFIG_FILE):
+        return {}
+
+    try:
+        f = open(CONFIG_FILE, "r")
+        config = json.load(f)
+        f.close()
+        return config
+    except (json.JSONDecodeError, OSError):
+        return {}
+
