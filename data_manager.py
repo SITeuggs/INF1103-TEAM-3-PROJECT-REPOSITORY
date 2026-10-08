@@ -60,3 +60,34 @@ def load_entries() -> list:
     except Exception as e:
         print(f"  (Could not load from Sheets: {e})")
         return []
+
+def save_entry(row: dict) -> bool:
+    """Save one entry row to Google Sheets. Returns True if it worked."""
+    # turn every value into text before sending
+    record = {}
+    for key, value in row.items():
+        record[key] = str(value)
+
+    payload = {
+        "headers": FIELDNAMES,
+        "record": record,
+    }
+
+    try:
+        resp = requests.post(SHEET_URL, json=payload,
+                             allow_redirects=True, timeout=TIMEOUT)
+    except requests.RequestException as e:
+        print(f"  (Could not save to Sheets: {e})")
+        return False
+
+    if resp.status_code != 200:
+        return False
+
+    try:
+        result = resp.json()
+        if result.get("status") == "ok":
+            return True
+        return False
+    except ValueError:
+        # got a 200 but not json — assume it went through
+        return True
