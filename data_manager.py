@@ -9,6 +9,7 @@ import requests
 
 SHEET_URL = "https://script.google.com/macros/s/AKfycbxEk8gxLvjqRYBgTEMn5x2Faa_ihPWGDhT1FTurPxGgBp6AK8vbcPMT193Y9D0NcgKG/exec"
 CONFIG_FILE = "config.json"
+TIMEOUT = 30
 
 # column order for the Google Sheet — do not reorder these
 FIELDNAMES = [
@@ -105,3 +106,12 @@ def load_config() -> dict:
     except (json.JSONDecodeError, OSError):
         return {}
 
+
+def save_config(config: dict) -> None:
+    """Save the local config file."""
+    try:
+        f = open(CONFIG_FILE, "w")
+        json.dump(config, f, indent=2)
+        f.close()
+    except OSError as e:
+        print(f"  (Failed to save config: {e})")
