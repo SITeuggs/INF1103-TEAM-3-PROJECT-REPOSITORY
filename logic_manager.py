@@ -98,8 +98,8 @@ MODES = {
 
 OUTCOME_LABELS = {
     "accept":   "all clear",
-    "flag":     "worth sitting with",
-    "check_in": "worth a closer look",
+    "check_in": "worth a check-in",
+    "flag":     "worth a closer look",
 }
 
 
@@ -164,9 +164,9 @@ def apply_rules(sentiment, mood, themes):
     """
     has_stress_theme = False
     for theme in themes:
-        if theme in STRESS_THEMES:
-            has_stress_theme = True
-            break
+        for word in STRESS_THEMES:
+            if word in theme:
+                has_stress_theme = True
 
     if sentiment == "negative" and mood >= 4:
         return "check_in"
@@ -364,7 +364,7 @@ def evaluate(entry, ai, records):
 
     themes = []
     for t in get_value(ai, "themes", []):
-        themes.append(t.lower())
+        themes.append(str(t).lower())
 
     rules_outcome = apply_rules(sentiment, mood, themes)
     ai_outcome = get_value(ai, "recommended_outcome", "accept")
@@ -373,6 +373,10 @@ def evaluate(entry, ai, records):
     score = adjust_score(mood, sentiment)
 
     if has_low_mood_streak(records) and outcome == "accept":
+        outcome = "check_in"
+
+    # a low score should never be labelled "all clear"
+    if score <= 2 and outcome == "accept":
         outcome = "check_in"
 
     return outcome, score
