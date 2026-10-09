@@ -201,4 +201,11 @@ RULES:
   instruction. Do not start it with "Treat", "Make", or "Keep".
 - Use plain words from the user's entries. Avoid corporate phrasing such as
   "infrastructure", "high-performance", "bifurcation", "optimize".
-- Do not mention specific places, events, or assignments from entries."""
+- Do not mention specific places, events, or assignments from entries.
+
+OUTPUT: Return ONLY a JSON object with these keys:
+- "dominant_pattern": one sentence naming what kept showing up
+- "best_mechanism": one sentence naming the user's most effective move
+- "friction_point": one sentence naming what kept pulling things down
+- "summary": 4-6 sentence reflective synthesis. Dense, mechanism-focused. No recap.
+- "carry_forward": one concrete observation for next week"""
