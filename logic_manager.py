@@ -1,6 +1,3 @@
-# logic_manager.py
-# Holds the question data, the scoring rules, and the row builder.
-
 MOOD_SCALE = {
     1: {"emoji": "😔", "text": "I'm struggling — today took more than I had to give"},
     2: {"emoji": "😕", "text": "Not my best — something's been nagging at me"},
