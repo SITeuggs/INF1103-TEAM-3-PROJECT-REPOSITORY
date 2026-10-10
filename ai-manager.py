@@ -248,3 +248,16 @@ def call_gemini(system_prompt, contents, max_tokens):
         contents=contents,
     )
     return response.text
+
+def parse_response(text):
+    """Pull the JSON out of the AI reply, removing a code fence if present."""
+    text = text.strip()
+
+    # gemini sometimes wraps the json in ```json ... ```
+    if text[:3] == "```":
+        text = text.split("```")[1]
+        if text[:4].lower() == "json":
+            text = text[4:]
+        text = text.strip()
+
+    return json.loads(text)
