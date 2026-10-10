@@ -347,3 +347,17 @@ def enrich(entry):
 
     print("  (Using fallback, AI could not process this entry)")
     return make_fallback()
+
+def pipes_to_commas(text):
+    """Turn 'calm|tired' into 'calm, tired'. Empty text becomes 'n/a'."""
+    text = str(text)
+    if not text:
+        return "n/a"
+    return join_with(text.split("|"), ", ")
+
+
+def or_na(value):
+    """Return the value, or 'n/a' when it is empty."""
+    if not value:
+        return "n/a"
+    return value
