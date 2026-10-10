@@ -318,3 +318,32 @@ def build_payload(entry):
         "Q6 — Mode: " + entry["mode"] + " (" + mode_label + ")",
     ]
     return join_with(lines, "\n")
+
+def enrich(entry):
+    """
+    Send one entry to Gemini and return the analysis.
+    Tries twice, then falls back to safe defaults so the app never crashes.
+    """
+    payload = build_payload(entry)
+
+    for attempt in range(1, 3):
+        # step 1: talk to Gemini. If that fails, trying again will not help.
+        try:
+            raw = call_gemini(SYSTEM_PROMPT, payload, 800)
+        except Exception as error:
+            print("  (AI error: " + str(error) + ", attempt " + str(attempt) + ")")
+            break
+
+        # step 2: turn the reply into a dictionary. A bad reply is worth a retry.
+        try:
+            data = parse_response(raw)
+        except Exception:
+            print("  (AI response not valid JSON, attempt " + str(attempt) + ")")
+            continue
+
+        if validate_response(data):
+            return data
+        print("  (AI response invalid, attempt " + str(attempt) + ")")
+
+    print("  (Using fallback, AI could not process this entry)")
+    return make_fallback()
