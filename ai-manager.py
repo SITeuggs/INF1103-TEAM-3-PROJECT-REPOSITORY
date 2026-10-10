@@ -209,3 +209,13 @@ OUTPUT: Return ONLY a JSON object with these keys:
 - "friction_point": one sentence naming what kept pulling things down
 - "summary": 4-6 sentence reflective synthesis. Dense, mechanism-focused. No recap.
 - "carry_forward": one concrete observation for next week"""
+
+# the only values we accept back from the AI
+ALLOWED_SENTIMENT = ("positive", "neutral", "negative")
+ALLOWED_CONGRUENCE = ("aligned", "diverged")
+ALLOWED_OUTCOME = ("accept", "flag", "check_in")
+ALLOWED_TAGS = ("work", "sleep", "exercise", "social", "study", "rest")
+
+# the keys the weekly review needs back before it can be displayed
+WEEKLY_KEYS = ("dominant_pattern", "best_mechanism", "friction_point",
+               "summary", "carry_forward")
