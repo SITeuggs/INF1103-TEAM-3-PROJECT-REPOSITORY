@@ -219,3 +219,19 @@ ALLOWED_TAGS = ("work", "sleep", "exercise", "social", "study", "rest")
 # the keys the weekly review needs back before it can be displayed
 WEEKLY_KEYS = ("dominant_pattern", "best_mechanism", "friction_point",
                "summary", "carry_forward")
+
+def make_fallback():
+    """Safe default answers, used when the AI fails so the app keeps working."""
+    fallback = {
+        "sentiment": "neutral",
+        "emotions": [],
+        "themes": [],
+        "congruence": "aligned",
+        "congruence_note": "",
+        "tag_ai": "rest",
+        "recommended_outcome": "accept",
+        "reasoning": "AI fallback — could not process",
+        "reflection": "",
+        "reframe": "",
+    }
+    return fallback
