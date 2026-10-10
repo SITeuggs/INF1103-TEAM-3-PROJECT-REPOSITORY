@@ -235,3 +235,16 @@ def make_fallback():
         "reframe": "",
     }
     return fallback
+
+def call_gemini(system_prompt, contents, max_tokens):
+    """Send one prompt to Gemini and return the raw text it replies with."""
+    settings = {
+        "system_instruction": system_prompt,
+        "max_output_tokens": max_tokens,
+    }
+    response = gemini_client.models.generate_content(
+        model=MODEL,
+        config=settings,
+        contents=contents,
+    )
+    return response.text
