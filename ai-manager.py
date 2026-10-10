@@ -286,3 +286,35 @@ def validate_response(data):
     data["tag_ai"] = tag
 
     return True
+
+def build_payload(entry):
+    """Build the text block that gets sent to Gemini for one entry."""
+    mood = entry["mood"]
+    band = mood_band(mood)
+    mood_desc = MOOD_SCALE[mood]["text"]
+    trigger_label = TRIGGERS[band]["options"][entry["trigger_choice"]]
+    clarity_label = CLARITY_OPTIONS[entry["clarity"]]
+    mode_label = MODES[entry["mode"]]
+
+    # say "Skipped" rather than leaving the follow-up blank
+    followup = get_value(entry, "followup_text", "")
+    if not followup:
+        followup = "Skipped"
+
+    clarity_q = get_value(entry, "clarity_q", "")
+    clarity_text = get_value(entry, "clarity_text", "")
+    close_q = get_value(entry, "close_q", "")
+    close_text = get_value(entry, "close_text", "")
+
+    lines = [
+        "ENTRY PAYLOAD",
+        'Q1 — Note: "' + entry["note"] + '"',
+        "Q2 — Mood: " + str(mood) + '/5 ("' + mood_desc + '")',
+        "Q3a — Trigger: " + entry["trigger_choice"] + " (" + trigger_label + ")",
+        'Q3b — Follow-up: "' + followup + '"',
+        "Q4 — Clarity: " + entry["clarity"] + " (" + clarity_label + ")",
+        'Q4a — Q: "' + clarity_q + '" A: "' + clarity_text + '"',
+        'Q5 — Q: "' + close_q + '" A: "' + close_text + '"',
+        "Q6 — Mode: " + entry["mode"] + " (" + mode_label + ")",
+    ]
+    return join_with(lines, "\n")
