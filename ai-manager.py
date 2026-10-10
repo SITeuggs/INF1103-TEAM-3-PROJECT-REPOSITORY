@@ -220,6 +220,7 @@ ALLOWED_TAGS = ("work", "sleep", "exercise", "social", "study", "rest")
 WEEKLY_KEYS = ("dominant_pattern", "best_mechanism", "friction_point",
                "summary", "carry_forward")
 
+
 def make_fallback():
     """Safe default answers, used when the AI fails so the app keeps working."""
     fallback = {
@@ -236,6 +237,7 @@ def make_fallback():
     }
     return fallback
 
+
 def call_gemini(system_prompt, contents, max_tokens):
     """Send one prompt to Gemini and return the raw text it replies with."""
     settings = {
@@ -249,6 +251,7 @@ def call_gemini(system_prompt, contents, max_tokens):
     )
     return response.text
 
+
 def parse_response(text):
     """Pull the JSON out of the AI reply, removing a code fence if present."""
     text = text.strip()
@@ -261,6 +264,7 @@ def parse_response(text):
         text = text.strip()
 
     return json.loads(text)
+
 
 def validate_response(data):
     """Check the AI reply has every field we need, with allowed values."""
@@ -286,6 +290,7 @@ def validate_response(data):
     data["tag_ai"] = tag
 
     return True
+
 
 def build_payload(entry):
     """Build the text block that gets sent to Gemini for one entry."""
@@ -319,6 +324,7 @@ def build_payload(entry):
     ]
     return join_with(lines, "\n")
 
+
 def enrich(entry):
     """
     Send one entry to Gemini and return the analysis.
@@ -348,6 +354,7 @@ def enrich(entry):
     print("  (Using fallback, AI could not process this entry)")
     return make_fallback()
 
+
 def pipes_to_commas(text):
     """Turn 'calm|tired' into 'calm, tired'. Empty text becomes 'n/a'."""
     text = str(text)
@@ -361,3 +368,50 @@ def or_na(value):
     if not value:
         return "n/a"
     return value
+
+
+def build_weekly_payload(recent, trajectory):
+    """
+    Build the text block for the weekly review.
+    The list is already filtered and trimmed by the logic manager, and the
+    trajectory is calculated there too, so the AI is told the direction
+    rather than asked to guess it.
+    """
+    if not recent:
+        return None
+
+    blocks = []
+    number = 1
+    for r in recent:
+        # pull each value out, with a fallback if it is missing
+        date = str(get_value(r, "timestamp", ""))[:10]
+        mood = get_value(r, "mood", "?")
+        score = or_na(get_value(r, "score", ""))
+        sentiment = or_na(get_value(r, "sentiment", ""))
+        congruence = or_na(get_value(r, "congruence", ""))
+        note = str(get_value(r, "note", ""))[:200]
+        trigger = get_value(r, "trigger_label", "?")
+        followup = str(get_value(r, "followup_text", ""))[:150]
+        clarity = str(get_value(r, "clarity_text", ""))[:150]
+        close = get_value(r, "close_text", "")
+        emotions = pipes_to_commas(get_value(r, "emotions", ""))
+        themes = pipes_to_commas(get_value(r, "themes", ""))
+
+        lines = [
+            "Entry " + str(number) + " (" + date + "): mood=" + str(mood)
+            + "/5 | score=" + str(score) + " | sentiment=" + str(sentiment)
+            + " | congruence=" + str(congruence),
+            '  note: "' + note + '"',
+            "  trigger: " + str(trigger) + ' -> "' + followup + '"',
+            '  clarity answer: "' + clarity + '"',
+            "  emotions: " + emotions,
+            "  themes: " + themes,
+            '  what they chose to do next: "' + str(close) + '"',
+        ]
+        blocks.append(join_with(lines, "\n"))
+        number = number + 1
+
+    header = ("WEEKLY BATCH — " + str(len(recent)) + " entries\n"
+              + "MOOD TRAJECTORY (already calculated): " + trajectory + "\n"
+              + "========================================\n\n")
+    return header + join_with(blocks, "\n\n")
