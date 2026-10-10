@@ -261,3 +261,28 @@ def parse_response(text):
         text = text.strip()
 
     return json.loads(text)
+
+def validate_response(data):
+    """Check the AI reply has every field we need, with allowed values."""
+    if type(data) != dict:
+        return False
+    if get_value(data, "sentiment", "") not in ALLOWED_SENTIMENT:
+        return False
+    if get_value(data, "congruence", "") not in ALLOWED_CONGRUENCE:
+        return False
+    if get_value(data, "recommended_outcome", "") not in ALLOWED_OUTCOME:
+        return False
+    if type(get_value(data, "emotions", None)) != list:
+        return False
+    if type(get_value(data, "themes", None)) != list:
+        return False
+    if type(get_value(data, "reflection", None)) != str:
+        return False
+
+    # clean the tag up, and fall back to "rest" if it isn't one we allow
+    tag = str(get_value(data, "tag_ai", "")).lower().strip()
+    if tag not in ALLOWED_TAGS:
+        tag = "rest"
+    data["tag_ai"] = tag
+
+    return True
