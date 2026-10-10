@@ -415,3 +415,30 @@ def build_weekly_payload(recent, trajectory):
               + "MOOD TRAJECTORY (already calculated): " + trajectory + "\n"
               + "========================================\n\n")
     return header + join_with(blocks, "\n\n")
+
+
+def weekly_synthesis(recent, trajectory):
+    """Ask Gemini for a weekly summary across the recent entries."""
+    payload = build_weekly_payload(recent, trajectory)
+    if not payload:
+        return None
+
+    try:
+        raw = call_gemini(WEEKLY_PROMPT, payload, 600)
+        data = parse_response(raw)
+    except Exception as error:
+        print("  (Weekly synthesis error: " + str(error) + ")")
+        return None
+
+    # make sure every key we need came back
+    if type(data) == dict:
+        missing = False
+        for key in WEEKLY_KEYS:
+            if key not in data.keys():
+                missing = True
+                break
+        if not missing:
+            return data
+
+    print("  (Weekly synthesis response missing fields)")
+    return None
