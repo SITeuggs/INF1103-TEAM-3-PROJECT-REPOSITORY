@@ -54,3 +54,40 @@ def format_stamp(timestamp):
             return (timestamp[8:10] + " " + MONTHS[month_number - 1] + " "
                     + timestamp[0:4] + " · " + timestamp[11:16])
     return timestamp[:16]
+
+
+
+def valid_mood(x):
+    """Check the input is a number from 1 to 5."""
+    if not x.isdigit():
+        return False
+    number = int(x)
+    return number >= 1 and number <= 5
+
+
+def valid_abcd(x):
+    """Check the input is A, B, C, or D."""
+    return x.upper() in ("A", "B", "C", "D")
+
+
+def valid_abc(x):
+    """Check the input is A, B, or C."""
+    return x.upper() in ("A", "B", "C")
+
+
+def not_empty(x):
+    """Check the input isn't blank."""
+    return len(x) > 0
+
+
+
+def ask(question, is_valid, error_msg):
+    """
+    Keep asking the same question until the answer passes the check.
+    is_valid is one of the check functions above, passed in as an argument.
+    """
+    while True:
+        raw = input("  " + question + "  > ").strip()
+        if is_valid(raw):
+            return raw
+        print("  -> " + error_msg)
