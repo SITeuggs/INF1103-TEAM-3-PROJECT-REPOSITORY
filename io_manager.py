@@ -197,3 +197,83 @@ def collect_mode():
     choice = ask("Pick A, B, or C", valid_abc, "Enter A, B, or C.").upper()
     print("  -> " + MODES[choice])
     return choice
+
+
+
+def rule(char):
+    """Print a horizontal line across the display width."""
+    print(" " + char * WIDTH)
+
+
+def ledger_line(label, value):
+    """Print a line like  Mood ......... 4 / 5"""
+    value = str(value)
+    if not value:
+        value = "-"
+
+    # shorten the value if it won't fit
+    room = WIDTH - len(label) - 5
+    if len(value) > room:
+        value = value[:room - 1] + "…"
+
+    dots = "." * (WIDTH - len(label) - len(value) - 2)
+    print(" " + label + " " + dots + " " + value)
+
+
+def print_wrapped(text):
+    """Print a paragraph wrapped to fit the display width."""
+    for line in wrap_text(text, WIDTH - 1):
+        print(" " + line)
+
+
+def show_entry(row):
+    """Show one finished entry with the AI reading and the outcome."""
+    print()
+    print(" MIRA · " + format_stamp(get_value(row, "timestamp", "")))
+    rule("─")
+
+    ledger_line("Mood", str(row["mood"]) + " / 5")
+    ledger_line("Driver", row["trigger_label"].split(" — ")[0])
+    ledger_line("Clarity", row["clarity_label"].split(" — ")[0])
+
+    emotions = get_value(row, "emotions", "")
+    if emotions:
+        ledger_line("Feeling", join_with(emotions.split("|"), ", "))
+
+    themes = get_value(row, "themes", "")
+    if themes:
+        ledger_line("About", join_with(themes.split("|"), ", "))
+
+    congruence = get_value(row, "congruence", "")
+    if congruence:
+        ledger_line("Words vs rating", congruence)
+
+    rule("─")
+
+    reflection = get_value(row, "reflection", "")
+    if reflection:
+        print(" READING")
+        print_wrapped(reflection)
+
+        congruence_note = get_value(row, "congruence_note", "")
+        if congruence == "diverged" and congruence_note:
+            print()
+            print_wrapped(congruence_note)
+
+        reframe = get_value(row, "reframe", "")
+        if reframe:
+            print()
+            print_wrapped("❝ " + reframe + " ❞")
+
+    outcome = get_value(OUTCOME_LABELS, get_value(row, "outcome", ""), "pending")
+
+    left = "OUTCOME " + outcome
+    right = "SCORE " + str(get_value(row, "score", "-")) + "/5"
+
+    gap = WIDTH - len(left) - len(right)
+    if gap < 2:
+        gap = 2
+
+    rule("═")
+    print(" " + left + " " * gap + right)
+    print()
