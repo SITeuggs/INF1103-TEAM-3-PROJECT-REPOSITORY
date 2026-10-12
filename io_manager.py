@@ -91,3 +91,109 @@ def ask(question, is_valid, error_msg):
         if is_valid(raw):
             return raw
         print("  -> " + error_msg)
+
+
+
+        def collect_note():
+    """Q1. The free-form note about the user's day."""
+    print("\n  How's your day been? Tell me about it!")
+    print("  Type 'done' on its own line to finish.\n")
+
+    while True:
+        lines = []
+        while True:
+            line = input("  | ")
+            if line.strip().lower() == "done":
+                break
+            lines.append(line)
+
+        text = join_with(lines, "\n").strip()
+        if text:
+            return text
+        print("  -> Write at least a few words.")
+
+
+def collect_mood():
+    """Q2. The mood score from 1 to 5."""
+    print("\n  How's your mood been today?\n")
+    for i in range(1, 6):
+        print("    " + str(i) + "  " + MOOD_SCALE[i]["emoji"]
+              + "  " + MOOD_SCALE[i]["text"])
+    print()
+
+    mood = int(ask("Pick 1-5", valid_mood, "Enter a number from 1 to 5."))
+    print("  -> " + MOOD_SCALE[mood]["emoji"] + "  " + MOOD_SCALE[mood]["text"])
+    return mood
+
+
+def collect_trigger(mood):
+    """Q3a. What drove the mood. The options change with the mood band."""
+    trigger = TRIGGERS[mood_band(mood)]
+    options = trigger["options"]
+
+    print("\n  " + trigger["prompt"] + "\n")
+    for key in options.keys():
+        print("    " + key + "  " + options[key])
+    print()
+
+    choice = ask("Pick A, B, C, or D", valid_abcd, "Enter A, B, C, or D.").upper()
+    print("  -> " + options[choice])
+    return choice, trigger["prompt"]
+
+
+def collect_followup(mood, trigger_choice):
+    """Q3b. An optional follow-up that depends on the trigger choice."""
+    question = FOLLOWUPS[mood_band(mood)][trigger_choice]
+
+    if question is None:
+        print("\n  (No follow-up needed)")
+        return "", ""
+
+    print("\n  " + question)
+    answer = input("  (Enter to skip, or type to elaborate)  > ").strip()
+
+    if not answer:
+        print("  -> Skipped")
+    return answer, question
+
+
+def collect_clarity():
+    """Q4. How clearly the user can name what they're feeling."""
+    print("\n  Do you understand what you're feeling right now?\n")
+    for key in CLARITY_OPTIONS.keys():
+        print("    " + key + "  " + CLARITY_OPTIONS[key])
+    print()
+
+    choice = ask("Pick A, B, or C", valid_abc, "Enter A, B, or C.").upper()
+    print("  -> " + CLARITY_OPTIONS[choice])
+    return choice
+
+
+def collect_clarity_followup(mood, clarity):
+    """Q4a. Follow-up that depends on both the clarity answer and the mood."""
+    question = CLARITY_FOLLOWUPS[clarity][mood_band(mood)]
+
+    print("\n  " + question)
+    answer = ask("", not_empty, "Write at least a few words.")
+    return answer, question
+
+
+def collect_close(mood):
+    """Q5. The closing question. Changes with the mood band."""
+    question = CLOSE_PROMPTS[mood_band(mood)]
+
+    print("\n  " + question)
+    answer = ask("", not_empty, "Write at least a few words.")
+    return answer, question
+
+
+def collect_mode():
+    """Q6. Which kind of response the user wants back."""
+    print("\n  What would help most right now?\n")
+    for key in MODES.keys():
+        print("    " + key + "  " + MODES[key])
+    print()
+
+    choice = ask("Pick A, B, or C", valid_abc, "Enter A, B, or C.").upper()
+    print("  -> " + MODES[choice])
+    return choice
