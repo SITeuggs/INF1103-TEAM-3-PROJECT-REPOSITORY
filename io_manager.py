@@ -277,3 +277,120 @@ def show_entry(row):
     rule("═")
     print(" " + left + " " * gap + right)
     print()
+
+
+
+def show_entries(records):
+    """Show a table of the most recent entries."""
+    if not records:
+        print("\n  No entries yet.\n")
+        return
+
+    print()
+    print("  " + pad_right("ID", 10) + " " + pad_right("Date", 12) + " "
+          + pad_left("Mood", 4) + "  " + pad_right("Trigger", 30) + " "
+          + pad_right("Outcome", 12))
+    print("  " + "─" * 10 + " " + "─" * 12 + " "
+          + "─" * 4 + "  " + "─" * 30 + " " + "─" * 12)
+
+    for r in records[-20:]:
+        entry_id = str(get_value(r, "id", "?"))
+        date = str(get_value(r, "timestamp", ""))[:10]
+
+        mood = get_value(r, "mood", 3)
+        if not mood:
+            mood = 3
+        if mood in MOOD_SCALE.keys():
+            emoji = MOOD_SCALE[mood]["emoji"]
+        else:
+            emoji = ""
+
+        trigger = str(get_value(r, "trigger_label", ""))[:30]
+
+        outcome = get_value(r, "outcome", "")
+        if not outcome:
+            outcome = "pending"
+
+        print("  " + pad_right(entry_id, 10) + " " + pad_right(date, 12) + " "
+              + pad_left(emoji, 4) + "  " + pad_right(trigger, 30) + " "
+              + pad_right(outcome, 12))
+
+    shown = len(records)
+    if shown > 20:
+        shown = 20
+    print("\n  Showing " + str(shown) + " of " + str(len(records)) + " entries.\n")
+
+
+def show_weekly(result, count):
+    """Show the weekly review."""
+    print()
+    print(" MIRA · WEEKLY REVIEW · " + str(count) + " ENTRIES")
+    rule("─")
+    ledger_line("Mood trajectory", result["mood_trajectory"])
+    rule("─")
+
+    print(" PATTERN")
+    print_wrapped(result["dominant_pattern"])
+    print()
+
+    print(" YOUR BEST MOVE")
+    print_wrapped(result["best_mechanism"])
+    print()
+
+    print(" FRICTION POINT")
+    print_wrapped(result["friction_point"])
+    print()
+
+    rule("─")
+    print(" REFLECTION")
+    print_wrapped(result["summary"])
+    print()
+    print(" CARRY INTO NEXT WEEK")
+    print_wrapped(result["carry_forward"])
+    rule("═")
+    print()
+
+
+def show_support(contacts):
+    """Show the support contacts, styled to match the entry card."""
+    print()
+    rule("═")
+    print(" SUPPORT")
+    rule("─")
+
+    for item in contacts:
+        ledger_line(item["name"], item["contact"])
+
+    rule("═")
+    print()
+
+
+def show_weekly_snapshot(records, trajectory):
+    """
+    Shown when there are too few entries for a full synthesis.
+    Everything here is calculated, so it works with no AI at all.
+    """
+    count = len(records)
+    low, high = mood_range(records)
+    mean = average_mood(records)
+
+    print()
+    print(" MIRA · WEEKLY SNAPSHOT · " + str(count) + " ENTRIES")
+    rule("─")
+
+    if count > 0:
+        ledger_line("Mood trajectory", trajectory)
+        ledger_line("Range", str(low) + " to " + str(high))
+        ledger_line("Average", str(round(mean, 1)))
+        rule("─")
+
+    short_by = MIN_ENTRIES_FOR_REVIEW - count
+    if short_by == 1:
+        print_wrapped("One more entry and MIRA can look for patterns "
+                      "across the week.")
+    else:
+        print_wrapped(str(short_by) + " more entries and MIRA can look for "
+                      "patterns across the week.")
+
+    rule("═")
+    print()
