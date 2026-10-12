@@ -94,7 +94,7 @@ def ask(question, is_valid, error_msg):
 
 
 
-        def collect_note():
+def collect_note():
     """Q1. The free-form note about the user's day."""
     print("\n  How's your day been? Tell me about it!")
     print("  Type 'done' on its own line to finish.\n")
