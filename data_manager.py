@@ -52,12 +52,16 @@ def load_entries() -> list:
             print(f"  (Sheets error: {data['error']})")
             return []
 
-        # make sure mood and score come back as numbers, not text
+        # make sure mood and score come back as numbers, not text.
+        # a bad cell only affects its own row, instead of losing every entry
         for entry in data:
             for key in ("mood", "score"):
                 value = entry.get(key)
                 if value is not None and value != "":
-                    entry[key] = int(value)
+                    try:
+                        entry[key] = int(value)
+                    except ValueError:
+                        entry[key] = 0
 
         return data
 
@@ -102,10 +106,8 @@ def load_config() -> dict:
         return {}
 
     try:
-        f = open(CONFIG_FILE, "r")
-        config = json.load(f)
-        f.close()
-        return config
+        with open(CONFIG_FILE, "r") as f:
+            return json.load(f)
     except (json.JSONDecodeError, OSError):
         return {}
 
@@ -113,8 +115,7 @@ def load_config() -> dict:
 def save_config(config: dict) -> None:
     """Save the local config file."""
     try:
-        f = open(CONFIG_FILE, "w")
-        json.dump(config, f, indent=2)
-        f.close()
+        with open(CONFIG_FILE, "w") as f:
+            json.dump(config, f, indent=2)
     except OSError as e:
         print(f"  (Failed to save config: {e})")
