@@ -6,9 +6,11 @@ import os
 import re
 
 import requests
+from dotenv import load_dotenv
 
-SHEET_URL = "https://script.google.com/macros/s/AKfycbxEk8gxLvjqRYBgTEMn5x2Faa_ihPWGDhT1FTurPxGgBp6AK8vbcPMT193Y9D0NcgKG/exec"
-# can be overridden (e.g. in Docker) to point at a mounted volume
+load_dotenv()
+
+SHEET_URL = os.getenv("SHEET_URL")
 CONFIG_FILE = os.getenv("CONFIG_FILE", "config.json")
 TIMEOUT = 30
 
