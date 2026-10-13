@@ -17,7 +17,6 @@ logging.getLogger("google_genai").setLevel(logging.ERROR)
 #environmental variable for Gemini API Key
 from dotenv import load_dotenv
 import os
-from google import genai
 
 load_dotenv()  
 
