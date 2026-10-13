@@ -46,3 +46,62 @@ def greeting_for(hour):
     if hour < 18:
         return "afternoon"
     return "evening"
+
+def log_entry(name, records):
+    """
+    Run the whole flow for one entry:
+    ask the questions, send them to the AI, apply the rules, then save.
+    """
+    note = collect_note()
+    mood = collect_mood()
+    trigger_choice, trigger_question = collect_trigger(mood)
+    followup_text, followup_q = collect_followup(mood, trigger_choice)
+    clarity = collect_clarity()
+    clarity_text, clarity_q = collect_clarity_followup(mood, clarity)
+    close_text, close_q = collect_close(mood)
+    mode = collect_mode()
+
+    entry = {
+        "id":             make_entry_id(),
+        "timestamp":      make_timestamp(),
+        "profile":        name,
+        "note":           note,
+        "mood":           mood,
+        "trigger_choice": trigger_choice,
+        "trigger_prompt": trigger_question,
+        "followup_text":  followup_text,
+        "followup_q":     followup_q,
+        "clarity":        clarity,
+        "clarity_text":   clarity_text,
+        "clarity_q":      clarity_q,
+        "close_text":     close_text,
+        "close_q":        close_q,
+        "mode":           mode,
+    }
+
+    print("\n  ... analysing your note\n")
+
+    ai = enrich(entry)
+    outcome, score = evaluate(entry, ai, records)
+    row = build_row(entry, ai, outcome, score)
+    show_entry(row)
+
+    if needs_support_info(mood, score, outcome, records):
+        show_support(SUPPORT_CONTACTS)
+
+    records.append(row)
+
+    if save_entry(row):
+        print(" ✓ Logged to Google Sheets · " + str(len(records)) + " entries total\n")
+    else:
+        print(" ⚠ Could not reach Google Sheets."
+              " This entry is only kept until you close Mira.\n")
+
+
+def week_cutoff():
+    """
+    The first date in the window, as text like '2026-09-27'.
+    Minus one, because entries_since keeps the cutoff day itself, so
+    today plus the six days before it is WEEKLY_DAYS in total.
+    """
+    return str(datetime.now() - timedelta(days=WEEKLY_DAYS - 1))[:10]
