@@ -8,7 +8,8 @@ import re
 import requests
 
 SHEET_URL = "https://script.google.com/macros/s/AKfycbxEk8gxLvjqRYBgTEMn5x2Faa_ihPWGDhT1FTurPxGgBp6AK8vbcPMT193Y9D0NcgKG/exec"
-CONFIG_FILE = "config.json"
+# can be overridden (e.g. in Docker) to point at a mounted volume
+CONFIG_FILE = os.getenv("CONFIG_FILE", "config.json")
 TIMEOUT = 30
 
 # column order for the Google Sheet — do not reorder these
