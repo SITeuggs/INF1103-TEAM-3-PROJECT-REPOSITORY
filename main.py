@@ -141,3 +141,17 @@ def weekly_review(records):
         show_weekly(result, len(batch))
     else:
         print("  Could not generate weekly review.\n")
+
+def get_name():
+    """Read the user's name from the config file, asking for it the first time."""
+    config = load_config()
+
+    if "profile" in config.keys():
+        return config["profile"]
+
+    name = input("\n  Welcome to Mira! What's your name?  > ").strip()
+    if not name:
+        name = "friend"
+    config["profile"] = name
+    save_config(config)
+    return name
