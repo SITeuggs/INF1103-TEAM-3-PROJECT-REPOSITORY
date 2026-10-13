@@ -155,3 +155,36 @@ def get_name():
     config["profile"] = name
     save_config(config)
     return name
+
+def main():
+    """Load everything, then run the menu until the user quits."""
+    name = get_name()
+
+    print("\n  Mira  .  a quiet place to reflect")
+    print("  Loading your entries...")
+   
+    records = sort_by_time(load_entries())
+    hour = int(str(datetime.now())[11:13])
+    print("  Good " + greeting_for(hour) + ", " + name + ". "
+          + str(len(records)) + " entries loaded.\n")
+
+    while True:
+        print("  [1] Log a moment    [2] View entries    [3] Weekly review")
+        print("  [4] Support         [q] Quit")
+        choice = ask("", valid_menu, "Pick 1, 2, 3, 4, or q.")
+
+        if choice == "q":
+            print("\n  Take care, " + name + ".\n")
+            break
+        elif choice == "2":
+            show_entries(records)
+        elif choice == "3":
+            weekly_review(records)
+        elif choice == "4":
+            show_support(SUPPORT_CONTACTS)
+        else:
+            log_entry(name, records)
+
+
+if __name__ == "__main__":
+    main()
