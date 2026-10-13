@@ -1,12 +1,12 @@
 # MIRA · AI Reflection Companion
 
-A command-line mood reflection journal. You answer seven questions about your day,
+A command-line mood reflection journal. You answer six questions about your day,
 an AI (Google Gemini) reads what you wrote, and a set of rules in the program decides
 whether the entry is fine or worth a second look. Entries are saved to a Google Sheet.
 
 ## Features
 
-- **Log a moment**: seven adaptive questions. The follow-up questions change
+- **Log a moment**: six adaptive questions. The follow-up questions change
   depending on your mood rating and your earlier answers.
 - **View entries**: a table of your most recent entries.
 - **Weekly review**: looks at the last 7 days and asks the AI for one summary
