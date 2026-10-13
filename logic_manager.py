@@ -100,7 +100,7 @@ OUTCOME_LABELS = {
 }
 
 
-SEVERITY = {"accept": 0, "check_in": 1, "flag": 2}
+SEVERITY = {"accept": 0, "flag": 1, "check_in": 2}
 
 
 STRESS_THEMES = ("stress", "pressure", "overwhelm")
