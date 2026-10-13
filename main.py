@@ -105,3 +105,39 @@ def week_cutoff():
     today plus the six days before it is WEEKLY_DAYS in total.
     """
     return str(datetime.now() - timedelta(days=WEEKLY_DAYS - 1))[:10]
+
+def weekly_review(records):
+    """
+    Show the weekly review.
+    Prefers entries from the last 7 days. If there are too few, it looks
+    further back and says so. If there are still too few, it shows the
+    calculated snapshot instead of inventing patterns.
+    """
+    ordered = sort_by_time(records)
+    this_week = entries_since(ordered, week_cutoff())
+
+    widened = False
+    if len(this_week) >= MIN_ENTRIES_FOR_REVIEW:
+        batch = this_week[-WEEKLY_LIMIT:]
+    else:
+        batch = recent_entries(ordered, WEEKLY_LIMIT)
+        widened = True
+
+    trajectory = mood_trajectory(batch)
+
+    if len(batch) < MIN_ENTRIES_FOR_REVIEW:
+        show_weekly_snapshot(batch, trajectory)
+        return
+
+    if widened:
+        print("\n  (Only " + str(len(this_week)) + " entries in the last "
+              + str(WEEKLY_DAYS) + " days, so this looks further back.)")
+
+    print("\n  ... generating your weekly review\n")
+    result = weekly_synthesis(batch, trajectory)
+
+    if result:
+        result["mood_trajectory"] = trajectory
+        show_weekly(result, len(batch))
+    else:
+        print("  Could not generate weekly review.\n")
