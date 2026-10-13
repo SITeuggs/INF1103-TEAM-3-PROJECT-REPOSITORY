@@ -239,3 +239,32 @@ def test_build_row():
           "An internal thought or worry")
     check("row joins emotions with pipes", row["emotions"], "tired|worried")
     check("row stores the outcome", row["outcome"], "flag")
+
+
+def main():
+    """Run every test group, print a summary, and exit 1 if any failed."""
+    print("Logic tests (no API, no network)")
+
+    test_helpers()
+    test_mood_band()
+    test_apply_rules()
+    test_pick_more_serious()
+    test_adjust_score()
+    test_support()
+    test_evaluate()
+    test_saved_entries()
+    test_mood_numbers()
+    test_trajectory()
+    test_build_row()
+
+    total = tally["passed"] + tally["failed"]
+    print("\n" + str(tally["passed"]) + " of " + str(total) + " checks passed.")
+
+    if tally["failed"] > 0:
+        print("Some checks FAILED.")
+        sys.exit(1)
+    print("All checks passed.")
+
+
+if __name__ == "__main__":
+    main()
