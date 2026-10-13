@@ -18,19 +18,20 @@ whether the entry is fine or worth a second look. Entries are saved to a Google 
 
 You need:
 - A **Gemini API key**. Get one free at https://aistudio.google.com/apikey
+- A **Google Sheets web app URL** (the Apps Script deployment link). Ask the team for it; it is not in the repo.
 - **Python 3.11+** and **Docker Desktop**
 
 ### 1. Create a `.env` file
 
 In the project folder, create a file named `.env` (no other name, no `.txt` ending)
-containing one line:
-
+containing two lines:
 ```
 GEMINI_KEY=paste-your-key-here
-```
+SHEET_URL=paste-the-apps-script-url-here```
 
 > ⚠️ Never commit `.env` or share it. It's listed in `.gitignore` so git skips it.
 > If your key ever leaks, delete it in Google AI Studio and make a new one.
+> If the Sheets URL leaks, create a new Apps Script deployment and archive the old one.
 
 ## Running it
 
@@ -70,13 +71,12 @@ name, delete `config.json` (or `data/config.json` with Docker).
 | `data_manager.py` | Reading and writing Google Sheets and the local config file. |
 | `requirements.txt` | Python packages the project needs. |
 | `Dockerfile` | Builds the app into a container. |
-| `.env` | Your Gemini API key. You create this yourself; it is not in the repo. |
-
+| `.env` | Your Gemini API key and Sheets URL. You create this yourself; it is not in the repo. |
 ## Troubleshooting
 
 | Problem | Fix |
 |---|---|
 | `Using fallback, AI could not process this entry` | Check `.env` exists, the variable is named `GEMINI_KEY`, and the key is valid. |
-| `Could not reach Google Sheets` | Check your internet connection. The entry is kept until you quit, but it isn't saved to the sheet. |
+| `Could not reach Google Sheets` | Check your internet connection and that `SHEET_URL` in `.env` is correct. The entry is kept until you quit, but it isn't saved to the sheet. |
 | `ModuleNotFoundError` | Run `pip install -r requirements.txt` again. |
 | Docker: can't type answers | Make sure you used `docker run -it`. |
