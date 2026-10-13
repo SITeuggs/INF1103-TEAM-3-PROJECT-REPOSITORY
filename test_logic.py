@@ -176,3 +176,66 @@ def test_helpers():
     check("join_with turns numbers into text",
           logic_manager.join_with([1, 2], ", "), "1, 2")
     check("average of 1, 2, 3", logic_manager.average([1, 2, 3]), 2)
+
+ 
+def test_mood_band():
+    print("\nMood bands")
+    cases = [(1, "low"), (2, "low"), (3, "neutral"), (4, "high"), (5, "high")]
+    for case in cases:
+        check("mood " + str(case[0]),
+              logic_manager.mood_band(case[0]), case[1])
+
+
+def test_mood_numbers():
+    print("\nMood numbers")
+    records = [make_record(2), make_record(4), make_record(3)]
+    blank = make_record(3)
+    blank["mood"] = ""
+
+    check("entry_time reads the timestamp",
+          logic_manager.entry_time(make_record(3)), "2026-10-01T10:00:00")
+    check("mood_range gives low and high",
+          logic_manager.mood_range(records), (2, 4))
+    check("mood_range of nothing is 0, 0",
+          logic_manager.mood_range([]), (0, 0))
+    check("average_mood of 2, 4, 3",
+          logic_manager.average_mood(records), 3)
+    check("average_mood of nothing is 0",
+          logic_manager.average_mood([]), 0)
+    check("blank mood is skipped in the range",
+          logic_manager.mood_range([make_record(2), blank]), (2, 2))
+
+
+def test_trajectory():
+    print("\nMood trajectory")
+    # each case is (list of moods, expected trajectory)
+    cases = [([3], "flat"), ([3, 3, 3, 3], "flat"), ([2, 3, 4], "rising"),
+             ([5, 5, 2, 2], "falling"), ([1, 5, 1, 5], "volatile")]
+    for case in cases:
+        records = []
+        for m in case[0]:
+            records.append(make_record(m))
+        check("moods " + str(case[0]),
+              logic_manager.mood_trajectory(records), case[1])
+
+
+def test_build_row():
+    print("\nbuild_row()")
+    entry = {
+        "id": "3fa94c1e", "timestamp": "2026-10-02T15:52:10",
+        "profile": "Test", "note": "Long day.", "mood": 2,
+        "trigger_choice": "A", "trigger_prompt": "What pulled things down?",
+        "followup_text": "Deadlines", "followup_q": "What keeps coming back?",
+        "clarity": "B", "clarity_text": "Maybe stress", "clarity_q": "Guess?",
+        "close_text": "Sleep early", "close_q": "What will you change?",
+        "mode": "A",
+    }
+    ai = make_ai("negative", ["work stress"], "accept")
+    outcome, score = logic_manager.evaluate(entry, ai, [])
+    row = logic_manager.build_row(entry, ai, outcome, score)
+
+    check("row has 31 columns", len(row), 31)
+    check("row looks up the trigger label", row["trigger_label"],
+          "An internal thought or worry")
+    check("row joins emotions with pipes", row["emotions"], "tired|worried")
+    check("row stores the outcome", row["outcome"], "flag")
