@@ -36,6 +36,27 @@ class AIAnalysis:
         )
 
     @classmethod
+    def from_row(cls, row):
+        emotions = []
+        if row.get("emotions", ""):
+            emotions = str(row["emotions"]).split("|")
+        themes = []
+        if row.get("themes", ""):
+            themes = str(row["themes"]).split("|")
+        return cls(
+            row.get("sentiment", ""),
+            emotions,
+            themes,
+            row.get("congruence", ""),
+            row.get("congruence_note", ""),
+            row.get("tag_ai", ""),
+            row.get("recommended_outcome", ""),
+            row.get("reasoning", ""),
+            row.get("reflection", ""),
+            row.get("reframe", ""),
+        )
+
+    @classmethod
     def fallback(cls):
         return cls(reasoning="AI fallback — could not process")
 
@@ -79,3 +100,17 @@ class AIAnalysis:
     @property
     def reframe(self):
         return self._reframe
+
+    def to_fields(self):
+        return {
+            "sentiment": self._sentiment,
+            "emotions": "|".join(self._emotions),
+            "themes": "|".join(self._themes),
+            "congruence": self._congruence,
+            "congruence_note": self._congruence_note,
+            "tag_ai": self._tag_ai,
+            "recommended_outcome": self._recommended_outcome,
+            "reasoning": self._reasoning,
+            "reflection": self._reflection,
+            "reframe": self._reframe,
+        }
