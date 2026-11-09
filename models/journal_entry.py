@@ -1,3 +1,6 @@
+import random
+from datetime import datetime
+
 class JournalEntry:
     ID_CHARACTERS = "0123456789abcdef"
 
@@ -19,6 +22,40 @@ class JournalEntry:
         self._close_text = close_text
         self._close_q = close_q
         self._mode = mode
+
+    @staticmethod
+    def make_id():
+        entry_id = ""
+        for i in range(8):
+            entry_id = entry_id + random.choice(JournalEntry.ID_CHARACTERS)
+        return entry_id
+
+    @staticmethod
+    def make_timestamp(now=None):
+        if now is None:
+            now = datetime.now()
+        now_text = str(now)
+        return now_text[:10] + "T" + now_text[11:19]
+
+    @classmethod
+    def from_answers(cls, profile, answers, now=None):
+        return cls(
+            JournalEntry.make_id(),
+            JournalEntry.make_timestamp(now),
+            profile,
+            answers["note"],
+            answers["mood"],
+            answers["trigger_choice"],
+            answers["trigger_prompt"],
+            answers["followup_text"],
+            answers["followup_q"],
+            answers["clarity"],
+            answers["clarity_text"],
+            answers["clarity_q"],
+            answers["close_text"],
+            answers["close_q"],
+            answers["mode"],
+        )
 
     @property
     def id(self):
