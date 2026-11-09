@@ -37,6 +37,26 @@ class JournalEntry:
         now_text = str(now)
         return now_text[:10] + "T" + now_text[11:19]
 
+    def with_answers(self, answers):
+        """A new entry with every answer replaced; id, date and profile stay."""
+        return JournalEntry(
+            self._id,
+            self._timestamp,
+            self._profile,
+            answers["note"],
+            answers["mood"],
+            answers["trigger_choice"],
+            answers["trigger_prompt"],
+            answers["followup_text"],
+            answers["followup_q"],
+            answers["clarity"],
+            answers["clarity_text"],
+            answers["clarity_q"],
+            answers["close_text"],
+            answers["close_q"],
+            answers["mode"],
+        )
+
     @classmethod
     def from_answers(cls, profile, answers, now=None):
         return cls(
