@@ -101,6 +101,19 @@ class AIAnalysis:
     def reframe(self):
         return self._reframe
 
+    def lowered_themes(self):
+        lowered = []
+        for t in self._themes:
+            lowered.append(t.lower())
+        return lowered
+
+    def was_analysed(self):
+        if not self._sentiment:
+            return False
+        if not self._reflection:
+            return False
+        return True
+
     def to_fields(self):
         return {
             "sentiment": self._sentiment,
