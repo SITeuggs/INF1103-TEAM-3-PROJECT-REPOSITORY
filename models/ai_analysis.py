@@ -20,6 +20,26 @@ class AIAnalysis:
         self._reflection = reflection
         self._reframe = reframe
 
+    @classmethod
+    def from_dict(cls, data):
+        return cls(
+            data.get("sentiment", "neutral"),
+            data.get("emotions", []),
+            data.get("themes", []),
+            data.get("congruence", "aligned"),
+            data.get("congruence_note", ""),
+            data.get("tag_ai", "rest"),
+            data.get("recommended_outcome", "accept"),
+            data.get("reasoning", ""),
+            data.get("reflection", ""),
+            data.get("reframe", ""),
+        )
+
+    @classmethod
+    def fallback(cls):
+        return cls(reasoning="AI fallback — could not process")
+
+
     @property
     def sentiment(self):
         return self._sentiment
