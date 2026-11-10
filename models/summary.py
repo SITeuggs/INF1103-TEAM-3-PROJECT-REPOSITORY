@@ -41,3 +41,19 @@ class Summary:
     @property
     def trajectory(self):
         return self._trajectory
+
+    @property
+    def outcome_counts(self):
+        return dict(self._outcome_counts)
+
+    @property
+    def top_themes(self):
+        return list(self._top_themes)
+
+    @property
+    def top_emotions(self):
+        return list(self._top_emotions)
+
+    @property
+    def top_triggers(self):
+        return list(self._top_triggers)
