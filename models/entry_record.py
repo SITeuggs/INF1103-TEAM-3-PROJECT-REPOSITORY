@@ -63,3 +63,43 @@ class EntryRecord:
         return cls(entry, AIAnalysis.from_row(row),
                    str(row.get("outcome", "")),
                    cls._to_int(row.get("score", "")), labels)
+
+    @property
+    def entry(self):
+        return self._entry
+
+    @property
+    def analysis(self):
+        return self._analysis
+
+    @property
+    def outcome(self):
+        return self._outcome
+
+    @property
+    def score(self):
+        return self._score
+
+    @property
+    def id(self):
+        return self._entry.id
+
+    @property
+    def timestamp(self):
+        return self._entry.timestamp
+
+    @property
+    def date(self):
+        return str(self._entry.timestamp)[:10]
+
+    @property
+    def mood(self):
+        return self._entry.mood
+
+    @property
+    def trigger_label(self):
+        return self._labels.get("trigger_label", "")
+
+    @property
+    def clarity_label(self):
+        return self._labels.get("clarity_label", "")
