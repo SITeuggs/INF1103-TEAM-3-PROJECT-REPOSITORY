@@ -103,3 +103,33 @@ class EntryRecord:
     @property
     def clarity_label(self):
         return self._labels.get("clarity_label", "")
+
+    def to_row(self):
+        entry = self._entry
+        row = {
+            "id": entry.id,
+            "timestamp": entry.timestamp,
+            "profile": entry.profile,
+            "note": entry.note,
+            "mood": entry.mood,
+            "mood_label": self._labels.get("mood_label", ""),
+            "trigger_prompt": entry.trigger_prompt,
+            "trigger_choice": entry.trigger_choice,
+            "trigger_label": self._labels.get("trigger_label", ""),
+            "followup_prompt": entry.followup_q,
+            "followup_text": entry.followup_text,
+            "clarity_choice": entry.clarity,
+            "clarity_label": self._labels.get("clarity_label", ""),
+            "clarity_prompt": entry.clarity_q,
+            "clarity_text": entry.clarity_text,
+            "close_prompt": entry.close_q,
+            "close_text": entry.close_text,
+            "mode_choice": entry.mode,
+            "mode_label": self._labels.get("mode_label", ""),
+        }
+        fields = self._analysis.to_fields()
+        for key in fields.keys():
+            row[key] = fields[key]
+        row["outcome"] = self._outcome
+        row["score"] = self._score
+        return row
