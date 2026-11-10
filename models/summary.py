@@ -25,3 +25,19 @@ class Summary:
     @property
     def analysed_count(self):
         return self._analysed_count
+
+    @property
+    def average(self):
+        return self._average
+
+    @property
+    def low(self):
+        return self._low
+
+    @property
+    def high(self):
+        return self._high
+
+    @property
+    def trajectory(self):
+        return self._trajectory
