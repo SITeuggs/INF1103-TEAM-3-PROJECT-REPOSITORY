@@ -60,6 +60,29 @@ class IOManager:
                     + self._bank.mood_text(mood))
         return mood
 
+    def collect_trigger(self, mood):
+        options = self._bank.trigger_options(mood)
+        prompt = self._bank.trigger_prompt(mood)
+        self._write("\n  " + prompt + "\n")
+        for key in options.keys():
+            self._write("    " + key + "  " + options[key])
+        self._write("")
+        choice = self.ask("Pick A, B, C, or D",
+                          ChoiceValidator("ABCD", "Enter A, B, C, or D.")).upper()
+        self._write("  -> " + options[choice])
+        return choice, prompt
+
+    def collect_followup(self, mood, trigger_choice):
+        question = self._bank.followup_question(mood, trigger_choice)
+        if question is None:
+            self._write("\n  (No follow-up needed)")
+            return "", ""
+        self._write("\n  " + question)
+        answer = self._read("  (Enter to skip, or type to elaborate)  > ").strip()
+        if not answer:
+            self._write("  -> Skipped")
+        return answer, question
+
     def show(self, text):
         self._write(text)
 
