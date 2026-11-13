@@ -34,6 +34,32 @@ class IOManager:
         name = self._read("\n  Welcome to MIRA! What's your name?  > ").strip()
         return name
 
+    def collect_note(self):
+        self._write("\n  How's your day been? Tell me about it!")
+        self._write("  Type 'done' on its own line to finish.\n")
+        while True:
+            lines = []
+            while True:
+                line = self._read("  | ")
+                if line.strip().lower() == "done":
+                    break
+                lines.append(line)
+            text = "\n".join(lines).strip()
+            if text:
+                return text
+            self._write("  -> Write at least a few words.")
+
+    def collect_mood(self):
+        self._write("\n  How's your mood been today?\n")
+        for i in range(1, 6):
+            self._write("    " + str(i) + "  " + self._bank.mood_emoji(i)
+                        + "  " + self._bank.mood_text(i))
+        self._write("")
+        mood = int(self.ask("Pick 1-5", ChoiceValidator("12345", "Enter a number from 1 to 5.")))
+        self._write("  -> " + self._bank.mood_emoji(mood) + "  "
+                    + self._bank.mood_text(mood))
+        return mood
+
     def show(self, text):
         self._write(text)
 
