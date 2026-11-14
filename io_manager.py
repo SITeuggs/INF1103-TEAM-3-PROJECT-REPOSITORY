@@ -204,4 +204,38 @@ class IOManager:
     def print_wrapped(self, text):
         for line in IOManager.wrap_text(text, IOManager.WIDTH - 1):
             self._write(" " + line)
+
+    def show_entry(self, record):
+        analysis = record.analysis
+        self._write("")
+        self._write(" MIRA · " + IOManager.format_stamp(record.timestamp))
+        self.rule("─")
+        self.ledger_line("Mood", str(record.mood) + " / 5")
+        self.ledger_line("Driver", record.trigger_label.split(" — ")[0])
+        self.ledger_line("Clarity", record.clarity_label.split(" — ")[0])
+        if analysis.emotions:
+            self.ledger_line("Feeling", ", ".join(analysis.emotions))
+        if analysis.themes:
+            self.ledger_line("About", ", ".join(analysis.themes))
+        if analysis.congruence:
+            self.ledger_line("Words vs rating", analysis.congruence)
+        self.rule("─")
+        if analysis.reflection:
+            self._write(" READING")
+            self.print_wrapped(analysis.reflection)
+            if analysis.congruence == "diverged" and analysis.congruence_note:
+                self._write("")
+                self.print_wrapped(analysis.congruence_note)
+            if analysis.reframe:
+                self._write("")
+                self.print_wrapped("❝ " + analysis.reframe + " ❞")
+        outcome = self._bank.outcome_label(record.outcome)
+        left = "OUTCOME " + outcome
+        right = "SCORE " + str(record.score) + "/5"
+        gap = IOManager.WIDTH - len(left) - len(right)
+        if gap < 2:
+            gap = 2
+        self.rule("═")
+        self._write(" " + left + " " * gap + right)
+        self._write("")
         
