@@ -6,7 +6,7 @@ from settings import Settings
 
 class IOManager:
     WIDTH = 58
-    MENU_CHOICES = ("1", "2", "3", "4", "q")
+    MENU_CHOICES = ("1", "2", "3", "4", "5", "6", "7", "q")
     MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
               "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
     OUTCOME_ORDER = ("accept", "check_in", "flag")
@@ -68,14 +68,24 @@ class IOManager:
 
     def ask_menu(self):
         self._write("  [1] Log a moment    [2] View entries    [3] Weekly review")
-        self._write("  [4] Get support     [q] Quit")
+        self._write("  [4] Get support     [5] Filter data     [6] Edit an entry")
+        self._write("  [7] Delete an entry [q] Quit")
         choice = self.ask("", ChoiceValidator(
-            IOManager.MENU_CHOICES, "Pick 1, 2, 3, 4, or q."))
+            IOManager.MENU_CHOICES, "Pick 1, 2, 3, 4, 5, 6, 7, or q."))
         return choice.lower()
 
     def ask_name(self):
         name = self._read("\n  Welcome to MIRA! What's your name?  > ").strip()
         return name
+
+    def ask_entry_id(self, action):
+        return self.ask("Entry id to " + action,
+                        NonEmptyValidator("Type the id from the entry list."))
+
+    def ask_confirm(self, question):
+        answer = self.ask(question + " (y/n)",
+                          ChoiceValidator(("y", "n"), "Enter y or n."))
+        return answer.lower() == "y"
 
     def ask_filter(self):
         self._write("\n  Narrow down your entries. Press Enter to skip any question.")
@@ -446,3 +456,10 @@ class IOManager:
                              + str(now_counts[outcome]))
         self.rule("═")
         self._write("")
+
+    def show_current_note(self, record):
+        self._write("")
+        self._write(" " + record.date + " · mood " + str(record.mood) + " / 5")
+        self.rule("─")
+        self.print_wrapped(record.entry.note)
+        self.rule("─")
