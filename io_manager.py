@@ -1,12 +1,15 @@
 from io_parts.choice_validator import ChoiceValidator
+from io_parts.date_validator import DateValidator
 from io_parts.non_empty_validator import NonEmptyValidator
+from models.record_filter import RecordFilter
 from settings import Settings
 
 class IOManager:
     WIDTH = 58
-    MENU_CHOICES = ("1", "2", "3", "4", "q")
+    MENU_CHOICES = ("1", "2", "3", "4", "5", "6", "7", "q")
     MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
               "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
+    OUTCOME_ORDER = ("accept", "check_in", "flag")
     
     def __init__(self, question_bank, settings=None, read=None, write=None):
         if settings is None:
@@ -65,14 +68,63 @@ class IOManager:
 
     def ask_menu(self):
         self._write("  [1] Log a moment    [2] View entries    [3] Weekly review")
-        self._write("  [4] Get support     [q] Quit")
+        self._write("  [4] Get support     [5] Filter data     [6] Edit an entry")
+        self._write("  [7] Delete an entry [q] Quit")
         choice = self.ask("", ChoiceValidator(
-            IOManager.MENU_CHOICES, "Pick 1, 2, 3, 4, or q."))
+            IOManager.MENU_CHOICES, "Pick 1, 2, 3, 4, 5, 6, 7, or q."))
         return choice.lower()
 
     def ask_name(self):
         name = self._read("\n  Welcome to MIRA! What's your name?  > ").strip()
         return name
+
+    def ask_entry_id(self, action):
+        return self.ask("Entry id to " + action,
+                        NonEmptyValidator("Type the id from the entry list."))
+
+    def ask_confirm(self, question):
+        answer = self.ask(question + " (y/n)",
+                          ChoiceValidator(("y", "n"), "Enter y or n."))
+        return answer.lower() == "y"
+
+    def ask_filter(self):
+        self._write("\n  Narrow down your entries. Press Enter to skip any question.")
+        self._write("\n  Which kind of entries?")
+        for number in range(len(IOManager.OUTCOME_ORDER)):
+            self._write("    " + str(number + 1) + "  "
+                        + self._bank.outcome_label(IOManager.OUTCOME_ORDER[number]))
+        pick = self.ask("Pick 1, 2 or 3 (Enter for all)",
+                        ChoiceValidator(("1", "2", "3"), "Enter 1, 2 or 3, or press Enter.",
+                                        allow_blank=True))
+        self._write("")
+        mood_error = "Enter a number from 1 to 5, or press Enter."
+        low = self.ask("Lowest mood to include, 1 = struggling",
+                       ChoiceValidator("12345", mood_error, allow_blank=True))
+        high = self.ask("Highest mood to include, 5 = really good",
+                        ChoiceValidator("12345", mood_error, allow_blank=True))
+        since = self.ask("Only entries from this date, like 2026-10-23",
+                         DateValidator(allow_blank=True))
+        until = self.ask("Only entries up to this date, like 2026-10-30",
+                         DateValidator(allow_blank=True))
+        keyword = self.ask("A topic or word to look for, like exams",
+                           NonEmptyValidator(allow_blank=True))
+        outcome = None
+        if pick:
+            outcome = IOManager.OUTCOME_ORDER[int(pick) - 1]
+        if low and high and int(low) > int(high):
+            low, high = high, low
+            self._write("  (Lowest and highest were the wrong way round, so I swapped them.)")
+        if since and until and since > until:
+            since, until = until, since
+            self._write("  (The dates were the wrong way round, so I swapped them.)")
+        return RecordFilter(
+            outcome,
+            int(low) if low else None,
+            int(high) if high else None,
+            since if since else None,
+            until if until else None,
+            keyword if keyword else None,
+        )
 
     def collect_note(self):
         self._write("\n  How's your day been? Tell me about it!")
@@ -324,4 +376,90 @@ class IOManager:
             self.ledger_line(item["name"], item["contact"])
         self.rule("═")
         self._write("")
-        
+
+    def _entries_phrase(self, number):
+        if number == 1:
+            return "1 entry"
+        return str(number) + " entries"
+
+    def _words_with_counts(self, pairs):
+        text = ""
+        for pair in pairs:
+            if text:
+                text = text + ", "
+            text = text + pair[0] + " (" + self._entries_phrase(pair[1]) + ")"
+        if not text:
+            return "none found"
+        return text
+
+    def show_filter_summary(self, summary):
+        directions = {
+            "rising": "getting better",
+            "falling": "getting lower",
+            "flat": "staying about the same",
+            "volatile": "going up and down a lot",
+        }
+        self._write("")
+        self._write(" ABOUT THESE " + self._entries_phrase(summary.count).upper())
+        self.rule("─")
+        if summary.low == 0:
+            self._write(" Mood: not recorded for these entries.")
+        else:
+            self._write(" Average mood: " + str(round(summary.average, 1)) + " out of 5")
+            self._write("   (1 = struggling, 5 = really good)")
+            if summary.low == summary.high:
+                self._write(" Every mood rating was " + str(summary.low) + ".")
+            else:
+                self._write(" Your moods ranged from " + str(summary.low) + " to "
+                            + str(summary.high) + ".")
+            if summary.count >= 2:
+                self._write(" Across these entries, your mood was "
+                            + directions[summary.trajectory] + ".")
+        self._write("")
+        self._write(" How they were marked:")
+        counts = summary.outcome_counts
+        for outcome in ("accept", "check_in", "flag"):
+            self._write("   " + str(counts[outcome]) + "  "
+                        + self._bank.outcome_label(outcome))
+        self._write("")
+        self._write(" What came up most often:")
+        self.print_wrapped("Trigger: " + self._words_with_counts(summary.top_triggers[:1]))
+        if summary.analysed_count == 0:
+            self.print_wrapped("The AI has not read these entries, so there are "
+                               "no themes or feelings to show.")
+        else:
+            self.print_wrapped("Themes: " + self._words_with_counts(summary.top_themes))
+            self.print_wrapped("Feelings: " + self._words_with_counts(summary.top_emotions))
+            if summary.analysed_count < summary.count:
+                self.print_wrapped("(Themes and feelings come from the "
+                                   + str(summary.analysed_count)
+                                   + " entries the AI read.)")
+        self.rule("═")
+
+    def show_comparison(self, current, previous, direction):
+        self._write("")
+        self._write(" WEEK OVER WEEK")
+        self.rule("─")
+        self.ledger_line("Entries", str(previous.count) + " -> " + str(current.count))
+        if direction == "not enough data":
+            self.ledger_line("Average mood", "not enough data")
+        else:
+            self.ledger_line("Average mood",
+                             str(round(previous.average, 1)) + " -> "
+                             + str(round(current.average, 1)))
+        self.ledger_line("Direction", direction)
+        now_counts = current.outcome_counts
+        before_counts = previous.outcome_counts
+        for outcome in IOManager.OUTCOME_ORDER:
+            self.ledger_line(self._bank.outcome_label(outcome),
+                             str(before_counts[outcome]) + " -> "
+                             + str(now_counts[outcome]))
+        self.rule("═")
+        self._write("")
+
+    def show_current_note(self, record):
+        self._write("")
+        self._write(" " + record.date + " · mood " + str(record.mood) + " / 5")
+        self.rule("─")
+        self.print_wrapped(record.entry.note)
+        self.rule("─")
