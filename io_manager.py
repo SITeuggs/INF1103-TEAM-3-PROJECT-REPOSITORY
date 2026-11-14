@@ -1,4 +1,3 @@
-from settings import Settings
 from io_parts.choice_validator import ChoiceValidator
 from io_parts.non_empty_validator import NonEmptyValidator
 from settings import Settings
@@ -271,4 +270,58 @@ class IOManager:
             shown = limit
         self._write("\n  Showing " + str(shown) + " of " + str(len(records))
                     + " entries.\n")
+
+    def show_weekly(self, result, count, trajectory):
+        self._write("")
+        self._write(" MIRA · WEEKLY REVIEW · " + str(count) + " ENTRIES")
+        self.rule("─")
+        self.ledger_line("Mood trajectory", trajectory)
+        self.rule("─")
+        self._write(" PATTERN")
+        self.print_wrapped(result["dominant_pattern"])
+        self._write("")
+        self._write(" YOUR BEST MOVE")
+        self.print_wrapped(result["best_mechanism"])
+        self._write("")
+        self._write(" FRICTION POINT")
+        self.print_wrapped(result["friction_point"])
+        self._write("")
+        self.rule("─")
+        self._write(" REFLECTION")
+        self.print_wrapped(result["summary"])
+        self._write("")
+        self._write(" CARRY INTO NEXT WEEK")
+        self.print_wrapped(result["carry_forward"])
+        self.rule("═")
+        self._write("")
+
+    def show_weekly_snapshot(self, count, trajectory, low, high, mean):
+        self._write("")
+        self._write(" MIRA · WEEKLY SNAPSHOT · " + str(count) + " ENTRIES")
+        self.rule("─")
+        if count > 0:
+            self.ledger_line("Mood trajectory", trajectory)
+            self.ledger_line("Range", str(low) + " to " + str(high))
+            self.ledger_line("Average", str(round(mean, 1)))
+            self.rule("─")
+        short_by = self._settings.MIN_ENTRIES_FOR_REVIEW - count
+        if short_by == 1:
+            self.print_wrapped("One more entry and MIRA can look for "
+                               "patterns across your entries.")
+        else:
+            self.print_wrapped(str(short_by) + " more entries and MIRA can look "
+                               "for patterns across your entries.")
+        self.rule("═")
+        self._write("")
+
+    def show_support(self, contacts):
+        self._write("")
+        self.rule("═")
+        self._write(" GET SUPPORT")
+        self._write(" If today feels heavy, these services can help.")
+        self.rule("─")
+        for item in contacts:
+            self.ledger_line(item["name"], item["contact"])
+        self.rule("═")
+        self._write("")
         
