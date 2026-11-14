@@ -6,6 +6,8 @@ from settings import Settings
 class IOManager:
     WIDTH = 58
     MENU_CHOICES = ("1", "2", "3", "4", "q")
+    MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+              "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
     
     def __init__(self, question_bank, settings=None, read=None, write=None):
         if settings is None:
@@ -15,6 +17,44 @@ class IOManager:
         self._read = read if read is not None else input
         self._write = write if write is not None else print
 
+    @staticmethod
+    def pad_right(text, width):
+        text = str(text)
+        return text + " " * (width - len(text))
+
+    @staticmethod
+    def pad_left(text, width):
+        text = str(text)
+        return " " * (width - len(text)) + text
+
+    @staticmethod
+    def wrap_text(text, width):
+        lines = []
+        current = ""
+        for word in str(text).split():
+            if current == "":
+                current = word
+            elif len(current) + 1 + len(word) <= width:
+                current = current + " " + word
+            else:
+                lines.append(current)
+                current = word
+        if current != "":
+            lines.append(current)
+        return lines
+
+    @staticmethod
+    def format_stamp(timestamp):
+        timestamp = str(timestamp)
+        month = timestamp[5:7]
+        if len(timestamp) >= 16 and month.isdigit():
+            month_number = int(month)
+            if month_number >= 1 and month_number <= 12:
+                return (timestamp[8:10] + " "
+                        + IOManager.MONTHS[month_number - 1] + " "
+                        + timestamp[0:4] + " · " + timestamp[11:16])
+        return timestamp[:16]
+    
     def ask(self, question, validator):
         while True:
             raw = self._read("  " + question + "  > ").strip()
@@ -148,4 +188,20 @@ class IOManager:
     def show_notice(self, text):
         self._write("  (" + text + ")")
 
+    def rule(self, char):
+        self._write(" " + char * IOManager.WIDTH)
+
+    def ledger_line(self, label, value):
+        value = str(value)
+        if not value:
+            value = "-"
+        room = IOManager.WIDTH - len(label) - 5
+        if len(value) > room:
+            value = value[:room - 1] + "…"
+        dots = "." * (IOManager.WIDTH - len(label) - len(value) - 2)
+        self._write(" " + label + " " + dots + " " + value)
+
+    def print_wrapped(self, text):
+        for line in IOManager.wrap_text(text, IOManager.WIDTH - 1):
+            self._write(" " + line)
         
