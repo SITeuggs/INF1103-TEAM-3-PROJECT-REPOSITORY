@@ -366,4 +366,63 @@ class IOManager:
             self.ledger_line(item["name"], item["contact"])
         self.rule("═")
         self._write("")
+
+    def _entries_phrase(self, number):
+        if number == 1:
+            return "1 entry"
+        return str(number) + " entries"
+
+    def _words_with_counts(self, pairs):
+        text = ""
+        for pair in pairs:
+            if text:
+                text = text + ", "
+            text = text + pair[0] + " (" + self._entries_phrase(pair[1]) + ")"
+        if not text:
+            return "none found"
+        return text
+
+    def show_filter_summary(self, summary):
+        directions = {
+            "rising": "getting better",
+            "falling": "getting lower",
+            "flat": "staying about the same",
+            "volatile": "going up and down a lot",
+        }
+        self._write("")
+        self._write(" ABOUT THESE " + self._entries_phrase(summary.count).upper())
+        self.rule("─")
+        if summary.low == 0:
+            self._write(" Mood: not recorded for these entries.")
+        else:
+            self._write(" Average mood: " + str(round(summary.average, 1)) + " out of 5")
+            self._write("   (1 = struggling, 5 = really good)")
+            if summary.low == summary.high:
+                self._write(" Every mood rating was " + str(summary.low) + ".")
+            else:
+                self._write(" Your moods ranged from " + str(summary.low) + " to "
+                            + str(summary.high) + ".")
+            if summary.count >= 2:
+                self._write(" Across these entries, your mood was "
+                            + directions[summary.trajectory] + ".")
+        self._write("")
+        self._write(" How they were marked:")
+        counts = summary.outcome_counts
+        for outcome in ("accept", "check_in", "flag"):
+            self._write("   " + str(counts[outcome]) + "  "
+                        + self._bank.outcome_label(outcome))
+        self._write("")
+        self._write(" What came up most often:")
+        self.print_wrapped("Trigger: " + self._words_with_counts(summary.top_triggers[:1]))
+        if summary.analysed_count == 0:
+            self.print_wrapped("The AI has not read these entries, so there are "
+                               "no themes or feelings to show.")
+        else:
+            self.print_wrapped("Themes: " + self._words_with_counts(summary.top_themes))
+            self.print_wrapped("Feelings: " + self._words_with_counts(summary.top_emotions))
+            if summary.analysed_count < summary.count:
+                self.print_wrapped("(Themes and feelings come from the "
+                                   + str(summary.analysed_count)
+                                   + " entries the AI read.)")
+        self.rule("═")
         
