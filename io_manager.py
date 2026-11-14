@@ -238,4 +238,37 @@ class IOManager:
         self.rule("═")
         self._write(" " + left + " " * gap + right)
         self._write("")
+
+    def show_entries(self, records, empty_message="No entries yet."):
+        if not records:
+            self._write("\n  " + empty_message + "\n")
+            return
+        pad_right = IOManager.pad_right
+        pad_left = IOManager.pad_left
+        limit = self._settings.HISTORY_LIMIT
+        self._write("")
+        self._write("  " + pad_right("ID", 10) + " " + pad_right("Date", 12) + " "
+                    + pad_left("Mood", 4) + "  " + pad_right("Trigger", 26) + " "
+                    + pad_right("Outcome", 19))
+        self._write("  " + "─" * 10 + " " + "─" * 12 + " "
+                    + "─" * 4 + "  " + "─" * 26 + " " + "─" * 19)
+        for r in records[-limit:]:
+            mood = r.mood
+            if not mood:
+                mood = 3
+            emoji = self._bank.mood_emoji(mood)
+            outcome = r.outcome
+            if outcome:
+                outcome = self._bank.outcome_label(outcome)
+            else:
+                outcome = "pending"
+            self._write("  " + pad_right(r.id, 10) + " " + pad_right(r.date, 12)
+                        + " " + pad_left(emoji, 4) + "  "
+                        + pad_right(r.trigger_label[:26], 26) + " "
+                        + pad_right(outcome, 19))
+        shown = len(records)
+        if shown > limit:
+            shown = limit
+        self._write("\n  Showing " + str(shown) + " of " + str(len(records))
+                    + " entries.\n")
         
