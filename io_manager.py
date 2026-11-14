@@ -1,5 +1,6 @@
 from settings import Settings
 from io_parts.choice_validator import ChoiceValidator
+from io_parts.non_empty_validator import NonEmptyValidator
 from settings import Settings
 
 class IOManager:
@@ -82,6 +83,64 @@ class IOManager:
         if not answer:
             self._write("  -> Skipped")
         return answer, question
+
+    def collect_clarity(self):
+        options = self._bank.clarity_options()
+        self._write("\n  Do you understand what you're feeling right now?\n")
+        for key in options.keys():
+            self._write("    " + key + "  " + options[key])
+        self._write("")
+        choice = self.ask("Pick A, B, or C",
+                          ChoiceValidator("ABC", "Enter A, B, or C.")).upper()
+        self._write("  -> " + options[choice])
+        return choice
+
+    def collect_clarity_followup(self, mood, clarity):
+        question = self._bank.clarity_question(clarity, mood)
+        self._write("\n  " + question)
+        answer = self.ask("", NonEmptyValidator())
+        return answer, question
+
+    def collect_close(self, mood):
+        question = self._bank.close_prompt(mood)
+        self._write("\n  " + question)
+        answer = self.ask("", NonEmptyValidator())
+        return answer, question
+
+    def collect_mode(self):
+        modes = self._bank.modes()
+        self._write("\n  What would help most right now?\n")
+        for key in modes.keys():
+            self._write("    " + key + "  " + modes[key])
+        self._write("")
+        choice = self.ask("Pick A, B, or C",
+                          ChoiceValidator("ABC", "Enter A, B, or C.")).upper()
+        self._write("  -> " + modes[choice])
+        return choice
+
+    def collect_answers(self):
+        note = self.collect_note()
+        mood = self.collect_mood()
+        trigger_choice, trigger_question = self.collect_trigger(mood)
+        followup_text, followup_q = self.collect_followup(mood, trigger_choice)
+        clarity = self.collect_clarity()
+        clarity_text, clarity_q = self.collect_clarity_followup(mood, clarity)
+        close_text, close_q = self.collect_close(mood)
+        mode = self.collect_mode()
+        return {
+            "note": note,
+            "mood": mood,
+            "trigger_choice": trigger_choice,
+            "trigger_prompt": trigger_question,
+            "followup_text": followup_text,
+            "followup_q": followup_q,
+            "clarity": clarity,
+            "clarity_text": clarity_text,
+            "clarity_q": clarity_q,
+            "close_text": close_text,
+            "close_q": close_q,
+            "mode": mode,
+        }
 
     def show(self, text):
         self._write(text)
