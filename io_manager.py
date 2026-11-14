@@ -1,5 +1,7 @@
 from io_parts.choice_validator import ChoiceValidator
+from io_parts.date_validator import DateValidator
 from io_parts.non_empty_validator import NonEmptyValidator
+from models.record_filter import RecordFilter
 from settings import Settings
 
 class IOManager:
@@ -7,6 +9,7 @@ class IOManager:
     MENU_CHOICES = ("1", "2", "3", "4", "q")
     MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
               "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
+    OUTCOME_ORDER = ("accept", "check_in", "flag")
     
     def __init__(self, question_bank, settings=None, read=None, write=None):
         if settings is None:
@@ -73,6 +76,45 @@ class IOManager:
     def ask_name(self):
         name = self._read("\n  Welcome to MIRA! What's your name?  > ").strip()
         return name
+
+    def ask_filter(self):
+        self._write("\n  Narrow down your entries. Press Enter to skip any question.")
+        self._write("\n  Which kind of entries?")
+        for number in range(len(IOManager.OUTCOME_ORDER)):
+            self._write("    " + str(number + 1) + "  "
+                        + self._bank.outcome_label(IOManager.OUTCOME_ORDER[number]))
+        pick = self.ask("Pick 1, 2 or 3 (Enter for all)",
+                        ChoiceValidator(("1", "2", "3"), "Enter 1, 2 or 3, or press Enter.",
+                                        allow_blank=True))
+        self._write("")
+        mood_error = "Enter a number from 1 to 5, or press Enter."
+        low = self.ask("Lowest mood to include, 1 = struggling",
+                       ChoiceValidator("12345", mood_error, allow_blank=True))
+        high = self.ask("Highest mood to include, 5 = really good",
+                        ChoiceValidator("12345", mood_error, allow_blank=True))
+        since = self.ask("Only entries from this date, like 2026-10-23",
+                         DateValidator(allow_blank=True))
+        until = self.ask("Only entries up to this date, like 2026-10-30",
+                         DateValidator(allow_blank=True))
+        keyword = self.ask("A topic or word to look for, like exams",
+                           NonEmptyValidator(allow_blank=True))
+        outcome = None
+        if pick:
+            outcome = IOManager.OUTCOME_ORDER[int(pick) - 1]
+        if low and high and int(low) > int(high):
+            low, high = high, low
+            self._write("  (Lowest and highest were the wrong way round, so I swapped them.)")
+        if since and until and since > until:
+            since, until = until, since
+            self._write("  (The dates were the wrong way round, so I swapped them.)")
+        return RecordFilter(
+            outcome,
+            int(low) if low else None,
+            int(high) if high else None,
+            since if since else None,
+            until if until else None,
+            keyword if keyword else None,
+        )
 
     def collect_note(self):
         self._write("\n  How's your day been? Tell me about it!")
