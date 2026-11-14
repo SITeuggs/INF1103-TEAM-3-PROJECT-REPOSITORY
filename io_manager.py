@@ -425,4 +425,24 @@ class IOManager:
                                    + str(summary.analysed_count)
                                    + " entries the AI read.)")
         self.rule("═")
-        
+
+    def show_comparison(self, current, previous, direction):
+        self._write("")
+        self._write(" WEEK OVER WEEK")
+        self.rule("─")
+        self.ledger_line("Entries", str(previous.count) + " -> " + str(current.count))
+        if direction == "not enough data":
+            self.ledger_line("Average mood", "not enough data")
+        else:
+            self.ledger_line("Average mood",
+                             str(round(previous.average, 1)) + " -> "
+                             + str(round(current.average, 1)))
+        self.ledger_line("Direction", direction)
+        now_counts = current.outcome_counts
+        before_counts = previous.outcome_counts
+        for outcome in IOManager.OUTCOME_ORDER:
+            self.ledger_line(self._bank.outcome_label(outcome),
+                             str(before_counts[outcome]) + " -> "
+                             + str(now_counts[outcome]))
+        self.rule("═")
+        self._write("")
