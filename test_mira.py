@@ -228,6 +228,26 @@ class MiraTests(unittest.TestCase):
             )
         return Journal(records)
 
+    def test_row_round_trip(self):
+        record = self.make_record(
+            4,
+            "2026-10-22T08:30:00",
+            "check_in",
+            3,
+            "negative",
+            "A reading.",
+            ["work", "stress"],
+        )
+        rebuilt = EntryRecord.from_row(record.to_row())
+        self.assertEqual(rebuilt.id, record.id)
+        self.assertEqual(rebuilt.mood, 4)
+        self.assertEqual(rebuilt.score, 3)
+        self.assertEqual(rebuilt.outcome, "check_in")
+        self.assertEqual(rebuilt.analysis.themes, ["work", "stress"])
+        self.assertEqual(rebuilt.analysis.reflection, "A reading.")
+        self.assertEqual(rebuilt.trigger_label, record.trigger_label)
+        self.assertEqual(rebuilt.to_row(), record.to_row())
+
 
 if __name__ == "__main__":
     unittest.main()
