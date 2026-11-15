@@ -248,6 +248,52 @@ class MiraTests(unittest.TestCase):
         self.assertEqual(rebuilt.trigger_label, record.trigger_label)
         self.assertEqual(rebuilt.to_row(), record.to_row())
 
+    def test_recent_analysed_takes_the_latest(self):
+        journal = Journal(
+            [
+                self.make_record(1, "2026-10-01T10:00:00"),
+                self.make_record(2, "2026-10-02T10:00:00"),
+                self.make_record(3, "2026-10-03T10:00:00"),
+            ]
+        )
+        recent = journal.recent_analysed(2)
+        self.assertEqual([recent[0].mood, recent[1].mood], [2, 3])
+        self.assertEqual(journal.recent_analysed(0), [])
+
+    def test_keyword_finds_an_ai_theme(self):
+        journal = Journal(
+            [
+                self.make_record(2, "2026-10-18T10:00:00", themes=["exams", "stress"]),
+                self.make_record(3, "2026-10-19T10:00:00", themes=["friends"]),
+                self.make_record(4, "2026-10-20T10:00:00", themes=[]),
+            ]
+        )
+        found = []
+        for record in journal.filter(RecordFilter(keyword="exams")):
+            found.append(record.mood)
+        self.assertEqual(found, [2])
+
+    def test_corrupt_file_gives_empty_settings(self):
+        with open(self.config_path, "w") as f:
+            f.write("{this is not json")
+        self.assertEqual(ConfigStore(self.config_path).load(), {})
+
+    def test_create_and_read(self):
+        storage = self.memory_storage()
+        row = self.make_record(4, "2026-10-22T08:00:00").to_row()
+        storage.save(row)
+        rows = storage.load_all()
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["id"], row["id"])
+        self.assertEqual(rows[0]["mood"], "4")
+
+    def test_update(self):
+        storage = self.memory_storage()
+        row = self.make_record(3).to_row()
+        storage.save(row)
+        self.assertTrue(storage.update(row["id"], {"outcome": "flag", "score": 1}))
+        changed = storage.load_all()[0]
+        self.assertEqual((changed["outcome"], changed["score"]), ("flag", "1"))
 
 if __name__ == "__main__":
     unittest.main()
