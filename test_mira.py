@@ -295,5 +295,48 @@ class MiraTests(unittest.TestCase):
         changed = storage.load_all()[0]
         self.assertEqual((changed["outcome"], changed["score"]), ("flag", "1"))
 
+    def test_delete(self):
+        storage = self.memory_storage()
+        row = self.make_record(3).to_row()
+        storage.save(row)
+        self.assertTrue(storage.delete(row["id"]))
+        self.assertEqual(storage.load_all(), [])
+        self.assertFalse(storage.delete(row["id"]))
+
+    def test_a_corrupt_file_raises_instead_of_crashing(self):
+        path = os.path.join(self.folder, "journal.db")
+        with open(path, "wb") as f:
+            f.write(b"this is definitely not a sqlite database file" * 20)
+        storage = SQLiteStorage(path)
+        self.addCleanup(storage.close)
+        with self.assertRaises(StorageError):
+            storage.load_all()
+
+    def test_a_failed_save_keeps_the_record_for_the_session(self):
+        blocker = os.path.join(self.folder, "blocker")
+        with open(blocker, "w") as f:
+            f.write("a file, not a folder")
+        storage = SQLiteStorage(os.path.join(blocker, "journal.db"))
+        data = DataManager(storage, ConfigStore(self.config_path))
+        self.assertFalse(data.add_record(self.make_record(3)))
+        self.assertEqual(data.journal.count(), 1)
+        self.assertIn("Could not open the database", data.last_error)
+
+    def test_it_holds_fifteen_entries(self):
+        storage = self.memory_storage()
+        data = DataManager(storage, ConfigStore(self.config_path))
+        data.load_samples(self.SAMPLE_FILE, date(2026, 11, 6))
+        self.assertEqual(data.journal.count(), 15)
+        self.assertEqual(len(storage.load_all()), 15)
+
+    def test_liskov_any_storage_can_stand_in_for_another(self):
+        file_storage = SQLiteStorage(os.path.join(self.folder, "journal.db"))
+        self.addCleanup(file_storage.close)
+        for storage in (self.memory_storage(), file_storage):
+            with self.subTest(storage.describe()):
+                self.assertIsInstance(storage, RecordStorage)
+                storage.save(self.make_record(3).to_row())
+                self.assertEqual(len(storage.load_all()), 1)
+
 if __name__ == "__main__":
     unittest.main()
