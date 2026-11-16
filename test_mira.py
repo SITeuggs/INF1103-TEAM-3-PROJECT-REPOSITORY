@@ -575,9 +575,6 @@ class MiraTests(unittest.TestCase):
         self.assertIn("ABOUT THESE 2 ENTRIES", self.output())
         self.assertIn("4.5 out of 5", self.output())
         
-if __name__ == "__main__":
-    unittest.main()
-
     def test_every_file_has_at_most_one_class(self):
         found = []
         for folder, names, files in os.walk(self.PROJECT_FOLDER):
@@ -680,3 +677,6 @@ if __name__ == "__main__":
         self.assertIn("15 entries loaded.", self.output())
         self.assertEqual(len(self.storage.load_all()), 15)
         self.assertEqual(self.data.journal.count(), 15)
+
+if __name__ == "__main__":
+    unittest.main()
