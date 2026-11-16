@@ -468,7 +468,7 @@ class MiraTests(unittest.TestCase):
         self.assertEqual(analysis.recommended_outcome, "accept")
         self.assertIn("Using fallback, AI could not process this entry", ai.warnings)
 
-        def test_a_reply_with_a_bad_schema_is_rejected(self):
+    def test_a_reply_with_a_bad_schema_is_rejected(self):
         validator = ResponseValidator.for_entry()
         self.assertTrue(validator.validate(json.loads(self.good_reply())))
         broken = []
