@@ -338,5 +338,106 @@ class MiraTests(unittest.TestCase):
                 storage.save(self.make_record(3).to_row())
                 self.assertEqual(len(storage.load_all()), 1)
 
+    def test_outcome_rules(self):
+        cases = [
+            ("negative", 4, [], "check_in"),
+            ("positive", 2, [], "check_in"),
+            ("neutral", 1, [], "check_in"),
+            ("negative", 2, ["stress"], "flag"),
+            ("neutral", 2, ["work stress"], "flag"),
+            ("negative", 2, ["overwhelmed"], "flag"),
+            ("negative", 3, ["stress"], "accept"),
+            ("positive", 5, [], "accept"),
+            ("negative", 2, [], "accept"),
+        ]
+        logic = LogicManager(Settings(env={}))
+        for case in cases:
+            with self.subTest(case[0] + ", mood " + str(case[1]) + ", " + str(case[2])):
+                analysis = self.make_analysis(case[0], case[2])
+                self.assertEqual(logic.rules_outcome(analysis, case[1]), case[3])
+
+    def test_first_matching_rule_wins(self):
+        logic = LogicManager(Settings(env={}))
+        analysis = self.make_analysis("negative", ["stress"])
+        self.assertEqual(logic.rules_outcome(analysis, 1), "check_in")
+
+    def test_ai_accept_cannot_lower_a_flag(self):
+        logic = LogicManager(Settings(env={}))
+        self.assertEqual(logic.more_serious("accept", "flag"), "flag")
+
+    def test_score_adjustment(self):
+        cases = [
+            (3, "negative", 2),
+            (1, "negative", 1),
+            (2, "positive", 3),
+            (4, "positive", 4),
+            (3, "neutral", 3),
+            (5, "negative", 4),
+            (3, "positive", 4),
+        ]
+        logic = LogicManager(Settings(env={}))
+        for case in cases:
+            with self.subTest(str(case)):
+                self.assertEqual(logic.adjust_score(case[0], case[1]), case[2])
+
+    def test_three_low_entries_make_a_streak(self):
+        policy = SupportPolicy(Settings(env={}))
+        records = [self.make_record(2), self.make_record(1), self.make_record(2)]
+        self.assertTrue(policy.has_low_mood_streak(records))
+
+    def test_a_low_score_is_never_all_clear(self):
+        logic = LogicManager(Settings(env={}))
+        outcome, score = logic.evaluate(
+            self.make_entry(2), self.make_analysis("neutral"), Journal()
+        )
+        self.assertEqual((outcome, score), ("check_in", 2))
+
+    def test_weekly_plan_is_the_last_seven_entries(self):
+        logic = LogicManager(Settings(env={}))
+        batch = logic.plan_weekly(self.dated(10))
+        self.assertEqual(len(batch), 7)
+        self.assertEqual(batch[0].date, "2026-10-04")
+        self.assertEqual(batch[-1].date, "2026-10-10")
+
+    def test_counts_average_and_range(self):
+        analyser = HistoryAnalyser(Settings(env={}))
+        summary = analyser.summarise(
+            [
+                self.make_record(2, "2026-10-20T10:00:00", "check_in"),
+                self.make_record(4, "2026-10-21T10:00:00", "accept"),
+                self.make_record(3, "2026-10-22T10:00:00", "flag"),
+            ]
+        )
+        self.assertEqual(summary.count, 3)
+        self.assertEqual(summary.average, 3)
+        self.assertEqual(summary.low, 2)
+        self.assertEqual(summary.high, 4)
+        self.assertEqual(
+            summary.outcome_counts, {"accept": 1, "check_in": 1, "flag": 1}
+        )
+
+    def test_the_two_weeks_are_split_correctly(self):
+        analyser = HistoryAnalyser(Settings(env={}))
+        items = [
+            (2, "2026-10-10T10:00:00"),
+            (2, "2026-10-16T23:00:00"),
+            (4, "2026-10-17T00:00:00"),
+            (5, "2026-10-23T23:00:00"),
+            (3, "2026-10-09T10:00:00"),
+            (3, "2026-10-24T10:00:00"),
+        ]
+        records = []
+        for item in items:
+            records.append(self.make_record(item[0], item[1]))
+        current, previous, direction = analyser.compare_weeks(
+            Journal(records), date(2026, 10, 23)
+        )
+        self.assertEqual(previous.count, 2)
+        self.assertEqual(current.count, 2)
+        self.assertEqual(previous.average, 2)
+        self.assertEqual(current.average, 4.5)
+        self.assertEqual(current.label, "This week")
+        self.assertEqual(previous.label, "Previous week")
+
 if __name__ == "__main__":
     unittest.main()
