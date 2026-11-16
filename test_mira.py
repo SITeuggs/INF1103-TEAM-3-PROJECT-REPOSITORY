@@ -537,5 +537,29 @@ class MiraTests(unittest.TestCase):
             ["", "23/10/2026", "2026-13-01", "today", "2026-1-1"],
         )
 
+    def test_ask_repeats_until_the_answer_is_valid(self):
+        self.answers = ["9", "x", "4"]
+        io = IOManager(QuestionBank(), Settings(env={}), self.read, self.write)
+        self.assertEqual(
+            io.ask("Pick 1-5", ChoiceValidator("12345", "Enter a number from 1 to 5.")),
+            "4",
+        )
+        self.assertEqual(len(self.prompts), 3)
+        self.assertEqual(self.output().count("Enter a number from 1 to 5."), 2)
+
+    def test_the_filter_answers(self):
+        self.answers = ["3", "2", "4", "2026-10-01", "2026-10-31", ""]
+        io = IOManager(QuestionBank(), Settings(env={}), self.read, self.write)
+        record_filter = io.ask_filter()
+        self.assertTrue(
+            record_filter.matches(self.make_record(3, "2026-10-15T10:00:00", "flag"))
+        )
+        self.assertFalse(
+            record_filter.matches(self.make_record(3, "2026-10-15T10:00:00", "accept"))
+        )
+        self.assertFalse(
+            record_filter.matches(self.make_record(5, "2026-10-15T10:00:00", "flag"))
+        )
+        
 if __name__ == "__main__":
     unittest.main()
