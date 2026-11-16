@@ -468,6 +468,61 @@ class MiraTests(unittest.TestCase):
         self.assertEqual(analysis.recommended_outcome, "accept")
         self.assertIn("Using fallback, AI could not process this entry", ai.warnings)
 
+        def test_a_reply_with_a_bad_schema_is_rejected(self):
+        validator = ResponseValidator.for_entry()
+        self.assertTrue(validator.validate(json.loads(self.good_reply())))
+        broken = []
+        for field, value in (
+            ("sentiment", "happy"),
+            ("recommended_outcome", "banana"),
+            ("themes", "work"),
+            ("reflection", 5),
+        ):
+            data = json.loads(self.good_reply())
+            data[field] = value
+            broken.append(data)
+        missing = json.loads(self.good_reply())
+        del missing["sentiment"]
+        broken.append(missing)
+        for data in broken:
+            with self.subTest(str(data)[:40]):
+                self.assertFalse(validator.validate(data))
+        self.assertFalse(
+            ResponseValidator.for_weekly().validate({"summary": "only one key"})
+        )
+        client = FakeAIClient([json.dumps({"sentiment": "happy"})])
+        ai = AIManager(client, QuestionBank(), Settings(env={}))
+        self.assertFalse(ai.enrich(self.make_entry()).was_analysed())
+        self.assertEqual(client.calls, 2)
+
+    def test_a_connection_error_is_not_retried(self):
+        client = FakeAIClient([AIError("no network")])
+        ai = AIManager(client, QuestionBank(), Settings(env={}))
+        analysis = ai.enrich(self.make_entry())
+        self.assertEqual(client.calls, 1)
+        self.assertFalse(analysis.was_analysed())
+        self.assertIn("AI error: no network, attempt 1", ai.warnings)
+
+    def test_a_good_reply_comes_back_as_a_dictionary(self):
+        client = FakeAIClient([self.weekly_reply()])
+        ai = AIManager(client, QuestionBank(), Settings(env={}))
+        result = ai.weekly_synthesis(
+            [self.make_record(3), self.make_record(4), self.make_record(2)], "flat"
+        )
+        self.assertEqual(result["carry_forward"], "Evenings were calmer.")
+
+    def test_liskov_any_ai_client_can_stand_in_for_another(self):
+        self.assertTrue(issubclass(GeminiClient, AIClient))
+        for replies in (
+            [self.good_reply("positive")],
+            [self.good_reply("positive", "accept", ["home"])],
+        ):
+            with self.subTest(str(replies)):
+                client = FakeAIClient(replies)
+                self.assertIsInstance(client, AIClient)
+                ai = AIManager(client, QuestionBank(), Settings(env={}))
+                self.assertEqual(ai.enrich(self.make_entry()).sentiment, "positive") 
+
 
 
 if __name__ == "__main__":
