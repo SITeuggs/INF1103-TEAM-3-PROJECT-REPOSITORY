@@ -523,7 +523,19 @@ class MiraTests(unittest.TestCase):
                 ai = AIManager(client, QuestionBank(), Settings(env={}))
                 self.assertEqual(ai.enrich(self.make_entry()).sentiment, "positive") 
 
+    def test_mood_is_a_choice_of_one_to_five(self):
+        self.check_validator(
+            ChoiceValidator("12345", "Enter a number from 1 to 5."),
+            ["1", "3", "5"],
+            ["0", "6", "", "x", "3.5", "-1", "²"],
+        )
 
+    def test_date(self):
+        self.check_validator(
+            DateValidator(),
+            ["2026-10-23"],
+            ["", "23/10/2026", "2026-13-01", "today", "2026-1-1"],
+        )
 
 if __name__ == "__main__":
     unittest.main()
