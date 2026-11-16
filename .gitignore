@@ -1,9 +1,7 @@
+.env
+config.json
+data/
+journal.db
 __pycache__/
 *.pyc
-.env
-.git
-config.json
-journal.db
-data/
-.vscode
-.github
+.vscode/
