@@ -560,6 +560,20 @@ class MiraTests(unittest.TestCase):
         self.assertFalse(
             record_filter.matches(self.make_record(5, "2026-10-15T10:00:00", "flag"))
         )
+
+    def test_history_shows_a_summary_of_the_filtered_entries(self):
+        self.save_profile()
+        storage = self.stored(
+            [
+                (1, "2026-10-20T10:00:00"),
+                (5, "2026-10-21T10:00:00"),
+                (4, "2026-10-22T10:00:00"),
+            ]
+        )
+        app = self.build(["5", "", "4", "", "", "", "", "q"], storage=storage)
+        app.run()
+        self.assertIn("ABOUT THESE 2 ENTRIES", self.output())
+        self.assertIn("4.5 out of 5", self.output())
         
 if __name__ == "__main__":
     unittest.main()
