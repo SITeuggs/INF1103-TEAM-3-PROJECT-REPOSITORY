@@ -439,5 +439,36 @@ class MiraTests(unittest.TestCase):
         self.assertEqual(current.label, "This week")
         self.assertEqual(previous.label, "Previous week")
 
+    def test_a_good_reply_becomes_an_analysis(self):
+        client = FakeAIClient(
+            [self.good_reply("negative", "check_in", ["work", "stress"])]
+        )
+        ai = AIManager(client, QuestionBank(), Settings(env={}))
+        analysis = ai.enrich(self.make_entry())
+        self.assertEqual(analysis.sentiment, "negative")
+        self.assertEqual(analysis.themes, ["work", "stress"])
+        self.assertTrue(analysis.was_analysed())
+        self.assertEqual(client.calls, 1)
+        self.assertEqual(ai.warnings, [])
+
+    def test_a_malformed_reply_is_retried_once(self):
+        client = FakeAIClient(["not json at all", self.good_reply("positive")])
+        ai = AIManager(client, QuestionBank(), Settings(env={}))
+        analysis = ai.enrich(self.make_entry())
+        self.assertEqual(analysis.sentiment, "positive")
+        self.assertEqual(client.calls, 2)
+        self.assertEqual(len(ai.warnings), 1)
+
+    def test_two_bad_replies_fall_back_to_neutral(self):
+        client = FakeAIClient(["nope"])
+        ai = AIManager(client, QuestionBank(), Settings(env={}))
+        analysis = ai.enrich(self.make_entry())
+        self.assertEqual(client.calls, 2)
+        self.assertFalse(analysis.was_analysed())
+        self.assertEqual(analysis.recommended_outcome, "accept")
+        self.assertIn("Using fallback, AI could not process this entry", ai.warnings)
+
+
+
 if __name__ == "__main__":
     unittest.main()
