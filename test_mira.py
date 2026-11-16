@@ -577,3 +577,106 @@ class MiraTests(unittest.TestCase):
         
 if __name__ == "__main__":
     unittest.main()
+
+    def test_every_file_has_at_most_one_class(self):
+        found = []
+        for folder, names, files in os.walk(self.PROJECT_FOLDER):
+            names[:] = [n for n in names if n not in ("__pycache__", ".git")]
+            for name in files:
+                if name.endswith(".py"):
+                    found.append(os.path.join(folder, name))
+        self.assertGreater(len(found), 30)
+        for path in sorted(found):
+            with self.subTest(path):
+                with open(path, encoding="utf-8") as f:
+                    tree = ast.parse(f.read())
+                classes = []
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.ClassDef):
+                        classes.append(node.name)
+                self.assertLessEqual(len(classes), 1, classes)
+
+    def test_a_divergent_entry_is_checked_in_and_scored_down(self):
+        self.save_profile()
+        app = self.build(
+            ["1"] + self.entry_answers(4, followup="the exam") + ["q"],
+            [self.good_reply("negative")],
+        )
+        app.run()
+        self.assertIn("OUTCOME worth a check-in", self.output())
+        self.assertIn("SCORE 3/5", self.output())
+        self.assertIn("Logged to the local database · 1 entries total", self.output())
+        self.assertEqual(len(self.storage.load_all()), 1)
+
+    def test_when_the_ai_is_down_the_entry_still_completes(self):
+        self.save_profile()
+        app = self.build(["1"] + self.entry_answers(4) + ["q"], [AIError("no network")])
+        app.run()
+        self.assertIn("AI error: no network", self.output())
+        self.assertIn("Using fallback", self.output())
+        self.assertIn("OUTCOME all clear", self.output())
+        self.assertNotIn("READING", self.output())
+        saved = self.storage.load_all()
+        self.assertEqual(len(saved), 1)
+        self.assertEqual(saved[0]["reflection"], "")
+
+    def test_weekly_review_uses_the_last_seven_entries_not_seven_days(self):
+        self.save_profile()
+        moods = [
+            (1, "2026-03-01T10:00:00"),
+            (1, "2026-03-02T10:00:00"),
+            (5, "2026-03-03T10:00:00"),
+            (5, "2026-03-04T10:00:00"),
+            (5, "2026-03-05T10:00:00"),
+            (5, "2026-03-06T10:00:00"),
+            (5, "2026-03-07T10:00:00"),
+            (5, "2026-03-08T10:00:00"),
+            (5, "2026-03-09T10:00:00"),
+        ]
+        app = self.build(["3", "q"], [self.weekly_reply()], self.stored(moods))
+        app.run()
+        self.assertIn("WEEKLY REVIEW · 7 ENTRIES", self.output())
+        self.assertEqual(self.client.calls, 1)
+        self.assertIn("Work kept showing up.", self.output())
+
+    def test_delete_an_entry_after_confirming(self):
+        self.save_profile()
+        storage = self.memory_storage()
+        record = self.make_record(3, "2026-10-21T10:00:00")
+        storage.save(record.to_row())
+        app = self.build(["7", record.id, "y", "q"], storage=storage)
+        app.run()
+        self.assertIn("Deleted entry " + record.id, self.output())
+        self.assertEqual(storage.load_all(), [])
+
+    def test_an_edit_is_read_again_and_saved_after_confirming(self):
+        self.save_profile()
+        storage = self.memory_storage()
+        record = self.make_record(4, "2026-10-21T10:00:00", sentiment="positive")
+        storage.save(record.to_row())
+        typed = ["6", record.id]
+        typed += self.entry_answers(2, "A", "It all went wrong.")
+        typed += ["y", "q"]
+        app = self.build(
+            typed,
+            [self.good_reply("negative", "check_in", ["stress"])],
+            storage,
+        )
+        app.run()
+        self.assertEqual(self.client.calls, 1)
+        self.assertIn("Updated entry " + record.id, self.output())
+        saved = storage.load_all()
+        self.assertEqual(len(saved), 1)
+        self.assertEqual(saved[0]["id"], record.id)
+        self.assertEqual(saved[0]["timestamp"], "2026-10-21T10:00:00")
+        self.assertEqual(saved[0]["note"], "A day.")
+        self.assertEqual(saved[0]["sentiment"], "negative")
+        self.assertEqual(saved[0]["mood"], "2")
+
+    def test_the_first_run_loads_fifteen_entries_without_being_asked(self):
+        self.save_profile()
+        app = self.build(["q"], auto_samples=True)
+        app.run()
+        self.assertIn("15 entries loaded.", self.output())
+        self.assertEqual(len(self.storage.load_all()), 15)
+        self.assertEqual(self.data.journal.count(), 15)
