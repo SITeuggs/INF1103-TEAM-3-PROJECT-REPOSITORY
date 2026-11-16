@@ -399,5 +399,45 @@ class MiraTests(unittest.TestCase):
         self.assertEqual(batch[0].date, "2026-10-04")
         self.assertEqual(batch[-1].date, "2026-10-10")
 
+    def test_counts_average_and_range(self):
+        analyser = HistoryAnalyser(Settings(env={}))
+        summary = analyser.summarise(
+            [
+                self.make_record(2, "2026-10-20T10:00:00", "check_in"),
+                self.make_record(4, "2026-10-21T10:00:00", "accept"),
+                self.make_record(3, "2026-10-22T10:00:00", "flag"),
+            ]
+        )
+        self.assertEqual(summary.count, 3)
+        self.assertEqual(summary.average, 3)
+        self.assertEqual(summary.low, 2)
+        self.assertEqual(summary.high, 4)
+        self.assertEqual(
+            summary.outcome_counts, {"accept": 1, "check_in": 1, "flag": 1}
+        )
+
+    def test_the_two_weeks_are_split_correctly(self):
+        analyser = HistoryAnalyser(Settings(env={}))
+        items = [
+            (2, "2026-10-10T10:00:00"),
+            (2, "2026-10-16T23:00:00"),
+            (4, "2026-10-17T00:00:00"),
+            (5, "2026-10-23T23:00:00"),
+            (3, "2026-10-09T10:00:00"),
+            (3, "2026-10-24T10:00:00"),
+        ]
+        records = []
+        for item in items:
+            records.append(self.make_record(item[0], item[1]))
+        current, previous, direction = analyser.compare_weeks(
+            Journal(records), date(2026, 10, 23)
+        )
+        self.assertEqual(previous.count, 2)
+        self.assertEqual(current.count, 2)
+        self.assertEqual(previous.average, 2)
+        self.assertEqual(current.average, 4.5)
+        self.assertEqual(current.label, "This week")
+        self.assertEqual(previous.label, "Previous week")
+
 if __name__ == "__main__":
     unittest.main()
